@@ -1,46 +1,19 @@
+import { useI18n } from '@/i18n';
 import { Button, Card, CardContent, CardHeader, CardFooter } from '../UI';
-import { Navigation, NavItem } from '../UI';
-import { ThemeToggle } from '../Theme';
 
 export interface HomePageProps {
   onStartPractice?: () => void;
   onOpenLibrary?: () => void;
-  onOpenSettings?: () => void;
 }
 
 export function HomePage({
   onStartPractice,
   onOpenLibrary,
-  onOpenSettings,
 }: HomePageProps) {
-  const navItems: NavItem[] = [
-    { id: 'home', label: '首页', icon: <span>🏠</span> },
-    { id: 'practice', label: '练习', icon: <span>🎵</span> },
-    { id: 'library', label: '曲库', icon: <span>📚</span> },
-  ];
+  const { t } = useI18n();
 
   return (
     <div className="homepage">
-      <header className="homepage-header">
-        <div className="brand">
-          <h1 className="brand-title">Resonance</h1>
-          <p className="brand-subtitle">Precision Practice Environment</p>
-        </div>
-        <div className="homepage-controls">
-          <ThemeToggle />
-          <Button variant="ghost" onClick={onOpenSettings}>
-            Settings
-          </Button>
-        </div>
-      </header>
-
-      <Navigation
-        items={navItems}
-        activeId="home"
-        orientation="horizontal"
-        variant="default"
-      />
-
       <main className="homepage-content">
         <section className="hero-section">
           <h2 className="hero-title">智能音乐练习助手</h2>
@@ -49,7 +22,7 @@ export function HomePage({
           </p>
           <div className="hero-actions">
             <Button variant="primary" size="large" onClick={onStartPractice}>
-              开始练习
+              {t.practice.startPractice}
             </Button>
             <Button variant="secondary" size="large" onClick={onOpenLibrary}>
               浏览曲库
@@ -67,7 +40,7 @@ export function HomePage({
               </p>
             </CardContent>
             <CardFooter>
-              <Button variant="ghost" size="small">了解更多</Button>
+              <Button variant="ghost" size="small">{t.common.more}</Button>
             </CardFooter>
           </Card>
 
@@ -80,7 +53,7 @@ export function HomePage({
               </p>
             </CardContent>
             <CardFooter>
-              <Button variant="ghost" size="small">了解更多</Button>
+              <Button variant="ghost" size="small">{t.common.more}</Button>
             </CardFooter>
           </Card>
 
@@ -93,7 +66,7 @@ export function HomePage({
               </p>
             </CardContent>
             <CardFooter>
-              <Button variant="ghost" size="small">了解更多</Button>
+              <Button variant="ghost" size="small">{t.common.more}</Button>
             </CardFooter>
           </Card>
         </section>
@@ -113,7 +86,7 @@ export function HomePage({
                 </div>
                 <div className="stat-preview-item">
                   <span className="stat-preview-value">--</span>
-                  <span className="stat-preview-label">平均准确率</span>
+                  <span className="stat-preview-label">{t.statistics.averageAccuracy}</span>
                 </div>
               </div>
             </CardContent>

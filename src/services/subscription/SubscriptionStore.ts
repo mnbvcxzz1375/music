@@ -124,7 +124,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
         }
       },
 
-      subscribe: async (planId, paymentMethodId) => {
+      subscribe: async (planId, _paymentMethodId) => {
         set({ loading: true, error: null });
         
         try {

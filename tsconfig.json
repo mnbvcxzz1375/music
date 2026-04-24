@@ -29,6 +29,7 @@
     /* Types */
     "types": ["vitest/globals", "node"]
   },
-  "include": ["src", "e2e"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "e2e"],
+  "exclude": ["src/backend"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

@@ -5,7 +5,6 @@ import PitchIndicator from '../PitchIndicator/PitchIndicator';
 import PartSelector from '../PartSelector/PartSelector';
 import { Calibration } from '../Calibration';
 import { Button, Card, CardContent, Tabs, TabItem } from '../UI';
-import { ThemeToggle } from '../Theme';
 import { ScoreRendererHandle } from '../ScoreRenderer/types';
 import { AudioCapture } from '@/audio/AudioCapture';
 import { PitchDetector } from '@/audio/detection/PitchDetector';
@@ -292,7 +291,6 @@ export function PracticePage({ xmlContent, onComplete }: PracticePageProps) {
           <p className="practice-piece-name">{pieceTitle}</p>
         </div>
         <div className="practice-header-right">
-          <ThemeToggle />
           <Button variant="ghost" onClick={() => setShowCalibration(true)}>
             校准
           </Button>
@@ -304,7 +302,7 @@ export function PracticePage({ xmlContent, onComplete }: PracticePageProps) {
         </div>
       </header>
 
-      <main className="practice-content">
+      <div className="practice-content">
         <div className="practice-score-section">
           <Card variant="outlined" padding="large">
             <div className="score-container">
@@ -438,7 +436,7 @@ export function PracticePage({ xmlContent, onComplete }: PracticePageProps) {
             )}
           </Card>
         </aside>
-      </main>
+      </div>
 
       {showCalibration && (
         <Calibration

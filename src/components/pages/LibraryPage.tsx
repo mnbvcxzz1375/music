@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Search, Music, Clock, Play, Star } from 'lucide-react';
 import { Button, Card, CardContent, CardHeader, Input, Tabs, TabItem } from '../UI';
-import { ThemeToggle } from '../Theme';
 import { usePieceStore } from '@/services/piece';
 import type { Piece, PieceFilter, InstrumentType, MusicGenre } from '@/services/piece/types';
 
@@ -183,7 +183,6 @@ export function LibraryPage({ onSelectPiece }: LibraryPageProps) {
           </p>
         </div>
         <div className="library-header-right">
-          <ThemeToggle />
           <input
             ref={fileInputRef}
             type="file"
@@ -222,7 +221,7 @@ export function LibraryPage({ onSelectPiece }: LibraryPageProps) {
             placeholder="搜索曲目或作曲家..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            leftIcon={<span>🔍</span>}
+            leftIcon={<Search size={18} />}
           />
 
           <Tabs
@@ -373,15 +372,15 @@ export function LibraryPage({ onSelectPiece }: LibraryPageProps) {
               <CardContent>
                 <div className="piece-info">
                   <span className="piece-info-item">
-                    <span className="piece-info-icon">🎵</span>
+                    <span className="piece-info-icon"><Music size={14} /></span>
                     {piece.instrumentTypes.map(i => instrumentLabels[i]).join(', ')}
                   </span>
                   <span className="piece-info-item">
-                    <span className="piece-info-icon">⏱</span>
+                    <span className="piece-info-icon"><Clock size={14} /></span>
                     {formatDuration(piece.durationSeconds)}
                   </span>
                   <span className="piece-info-item">
-                    <span className="piece-info-icon">▶</span>
+                    <span className="piece-info-icon"><Play size={14} /></span>
                     {piece.playCount}次
                   </span>
                 </div>
@@ -405,7 +404,7 @@ export function LibraryPage({ onSelectPiece }: LibraryPageProps) {
                     size="small"
                     onClick={(e) => handleToggleFavorite(piece.id, e)}
                   >
-                    {isFavorite(piece.id) ? '★ 已收藏' : '☆ 收藏'}
+                    {isFavorite(piece.id) ? <><Star fill="currentColor" size={14} className="inline-icon" /> 已收藏</> : <><Star size={14} className="inline-icon" /> 收藏</>}
                   </Button>
                 </div>
               </CardContent>

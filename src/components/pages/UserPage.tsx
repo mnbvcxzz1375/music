@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { User, Settings, CreditCard, BarChart } from 'lucide-react';
 import { Button, Card, CardContent, Input, Tabs, TabItem } from '../UI';
-import { ThemeToggle } from '../Theme';
 import { useAuthStore } from '@/services/auth';
+import { useI18n } from '@/i18n';
 
 export interface UserPageProps {
   onSuccess?: () => void;
 }
 
 export function UserPage({ onSuccess }: UserPageProps) {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState('login');
   const navigate = useNavigate();
   
@@ -28,7 +30,6 @@ export function UserPage({ onSuccess }: UserPageProps) {
             <p className="user-subtitle">{user.email}</p>
           </div>
           <div className="user-header-right">
-            <ThemeToggle />
             <Button variant="danger" onClick={handleLogout}>
               登出
             </Button>
@@ -40,7 +41,7 @@ export function UserPage({ onSuccess }: UserPageProps) {
             <CardContent>
               <div className="user-profile">
                 <div className="user-avatar">
-                  <span className="user-avatar-icon">👤</span>
+                  <span className="user-avatar-icon"><User size={24} /></span>
                 </div>
                 <div className="user-info">
                   <h2 className="user-name">{user.nickname || '用户'}</h2>
@@ -55,7 +56,7 @@ export function UserPage({ onSuccess }: UserPageProps) {
               <Card variant="outlined" hoverable>
                 <CardContent>
                   <div className="user-action-item">
-                    <span className="user-action-icon">⚙️</span>
+                    <span className="user-action-icon"><Settings size={20} /></span>
                     <span className="user-action-label">设置</span>
                   </div>
                 </CardContent>
@@ -66,7 +67,7 @@ export function UserPage({ onSuccess }: UserPageProps) {
               <Card variant="outlined" hoverable>
                 <CardContent>
                   <div className="user-action-item">
-                    <span className="user-action-icon">💳</span>
+                    <span className="user-action-icon"><CreditCard size={20} /></span>
                     <span className="user-action-label">订阅管理</span>
                   </div>
                 </CardContent>
@@ -77,7 +78,7 @@ export function UserPage({ onSuccess }: UserPageProps) {
               <Card variant="outlined" hoverable>
                 <CardContent>
                   <div className="user-action-item">
-                    <span className="user-action-icon">📊</span>
+                    <span className="user-action-icon"><BarChart size={20} /></span>
                     <span className="user-action-label">练习统计</span>
                   </div>
                 </CardContent>
@@ -90,8 +91,8 @@ export function UserPage({ onSuccess }: UserPageProps) {
   }
 
   const tabs: TabItem[] = [
-    { id: 'login', label: '登录' },
-    { id: 'register', label: '注册' },
+    { id: 'login', label: t.user.login },
+    { id: 'register', label: t.user.register },
   ];
 
   return (
@@ -99,9 +100,6 @@ export function UserPage({ onSuccess }: UserPageProps) {
       <header className="user-header">
         <div className="user-header-left">
           <h1 className="user-title">用户中心</h1>
-        </div>
-        <div className="user-header-right">
-          <ThemeToggle />
         </div>
       </header>
 
@@ -126,6 +124,7 @@ export function UserPage({ onSuccess }: UserPageProps) {
 }
 
 function LoginForm({ onSuccess }: { onSuccess: () => void }) {
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -153,20 +152,20 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
       <CardContent>
         <form className="auth-form" onSubmit={handleSubmit}>
           <Input
-            label="邮箱"
+            label={t.user.email}
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="请输入邮箱"
+            placeholder={t.user.email}
             required
           />
 
           <Input
-            label="密码"
+            label={t.user.password}
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="请输入密码"
+            placeholder={t.user.password}
             required
           />
 
@@ -177,9 +176,7 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
             fullWidth
             loading={loading}
             type="submit"
-          >
-            登录
-          </Button>
+          >{t.user.login}</Button>
 
           <div className="auth-divider">
             <span>或使用第三方登录</span>
@@ -187,7 +184,7 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
 
           <div className="oauth-buttons">
             <Button variant="secondary" fullWidth>
-              Google 登录
+              {t.user.googleLogin}
             </Button>
           </div>
         </form>
@@ -197,6 +194,7 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
 }
 
 function RegisterForm({ onSuccess }: { onSuccess: () => void }) {
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -237,11 +235,11 @@ function RegisterForm({ onSuccess }: { onSuccess: () => void }) {
       <CardContent>
         <form className="auth-form" onSubmit={handleSubmit}>
           <Input
-            label="邮箱"
+            label={t.user.email}
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="请输入邮箱"
+            placeholder={t.user.email}
             required
           />
 
@@ -254,7 +252,7 @@ function RegisterForm({ onSuccess }: { onSuccess: () => void }) {
           />
 
           <Input
-            label="密码"
+            label={t.user.password}
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -278,9 +276,7 @@ function RegisterForm({ onSuccess }: { onSuccess: () => void }) {
             fullWidth
             loading={loading}
             type="submit"
-          >
-            注册
-          </Button>
+          >{t.user.register}</Button>
         </form>
       </CardContent>
     </Card>

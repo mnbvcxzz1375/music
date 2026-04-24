@@ -22,8 +22,11 @@
     "docker:compose": "docker-compose up -d"
   },
   "dependencies": {
+    "chart.js": "^4.5.1",
+    "lucide-react": "^1.9.0",
     "opensheetmusicdisplay": "^1.9.7",
     "react": "^18.2.0",
+    "react-chartjs-2": "^5.3.1",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.14.1",
     "zustand": "^4.5.0"

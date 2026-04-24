@@ -157,7 +157,7 @@ export function ShareModal({ isOpen, onClose, shareData }: ShareModalProps) {
               <span className="share-platform-icon">f</span>
               <span className="share-platform-label">Facebook</span>
             </button>
-            {navigator.share && (
+            {typeof navigator.share === 'function' && (
               <button className="share-platform-btn" onClick={handleNativeShare}>
                 <span className="share-platform-icon">📤</span>
                 <span className="share-platform-label">更多</span>

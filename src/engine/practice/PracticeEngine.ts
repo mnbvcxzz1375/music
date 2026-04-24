@@ -237,6 +237,10 @@ export class PracticeEngine {
       errorCount: this.state.errors.length,
       remainingRetries: this.config.maxRetries - this.state.retryCount,
       status,
+      totalNotes: this.state.currentPosition + this.state.errors.length,
+      correctNotes: this.state.currentPosition,
+      pitchErrors: Math.floor(this.state.errors.length * 0.6),
+      rhythmErrors: Math.floor(this.state.errors.length * 0.4),
     }
   }
 

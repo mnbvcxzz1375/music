@@ -48,7 +48,7 @@ export function useTouchGestures(
   handlers: TouchGestureHandlers,
   config: TouchGestureConfig = defaultConfig
 ) {
-  const ref = useRef<HTMLElement>(null);
+  const ref = useRef<HTMLDivElement | null>(null);
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const lastTapRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const longPressTimerRef = useRef<number | null>(null);
@@ -225,8 +225,8 @@ export function SwipeableView({
   });
   
   return (
-    <div 
-      ref={ref as React.RefObject<HTMLDivElement>}
+    <div
+      ref={ref}
       className={className}
       {...handlers}
     >
@@ -242,29 +242,28 @@ export interface PinchZoomProps {
   className?: string;
 }
 
-export function PinchZoom({ 
-  children, 
-  minScale = 0.5, 
+export function PinchZoom({
+  children,
+  minScale = 0.5,
   maxScale = 3,
-  className 
+  className
 }: PinchZoomProps) {
   const [scale, setScale] = useState(1);
-  const [translate, setTranslate] = useState({ x: 0, y: 0 });
-  
+
   const { ref, handlers } = useTouchGestures({
     onPinch: (pinch) => {
       const newScale = Math.min(maxScale, Math.max(minScale, pinch.scale));
       setScale(newScale);
     },
   });
-  
+
   return (
-    <div 
-      ref={ref as React.RefObject<HTMLDivElement>}
+    <div
+      ref={ref}
       className={className}
       {...handlers}
       style={{
-        transform: `scale(${scale}) translate(${translate.x}px, ${translate.y}px)`,
+        transform: `scale(${scale})`,
         transformOrigin: 'center center',
       }}
     >

@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react';
 import { Button, Card, CardContent, CardHeader } from '../UI';
-import { ThemeToggle } from '../Theme';
 import { useCheckinStore } from '@/services/checkin';
 
 export interface CheckinPageProps {}
@@ -123,9 +122,6 @@ export function CheckinPage({}: CheckinPageProps) {
           <p className="checkin-subtitle">
             {checkedToday ? '今日已打卡 ✓' : '今日尚未打卡'}
           </p>
-        </div>
-        <div className="checkin-header-right">
-          <ThemeToggle />
         </div>
       </header>
 

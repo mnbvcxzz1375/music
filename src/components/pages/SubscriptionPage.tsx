@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Button, Card, CardContent, CardHeader, CardFooter, Tabs, TabItem } from '../UI';
-import { ThemeToggle } from '../Theme';
 import { useSubscriptionStore, FEATURE_LABELS } from '@/services/subscription';
 import { usePermission } from '@/services/permission';
 import type { SubscriptionPlan } from '@/services/subscription';
@@ -222,8 +221,7 @@ export function SubscriptionPage({ onSelectPlan }: SubscriptionPageProps) {
               { id: 'ai_analysis', label: 'AI建议' },
             ].map((feature) => {
               const freeResult = checkFeature(feature.id as any);
-              const premiumResult = { allowed: true };
-              
+
               return (
                 <div key={feature.id} className="comparison-row">
                   <div className="comparison-col">{feature.label}</div>
@@ -252,9 +250,6 @@ export function SubscriptionPage({ onSelectPlan }: SubscriptionPageProps) {
           <p className="subscription-subtitle">
             {isPremium() ? 'Premium会员' : '选择适合您的订阅方案'}
           </p>
-        </div>
-        <div className="subscription-header-right">
-          <ThemeToggle />
         </div>
       </header>
 

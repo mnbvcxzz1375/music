@@ -1,9 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, Tabs, TabItem, Button } from '../UI';
-import { ThemeToggle } from '../Theme';
 import { useStatisticsStore } from '@/services/statistics';
 import { useReportStore } from '@/services/report';
-import { ProgressTrend, SkillLevel, ReportPeriod } from '@/services/statistics/types';
+import { ProgressTrend, SkillLevel } from '@/services/statistics/types';
+import { ReportPeriod } from '@/services/report/types';
+import { Line, Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement,
+  Title, Tooltip, Legend, Filler
+} from 'chart.js';
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, Filler);
 
 export interface StatisticsPageProps {}
 
@@ -11,7 +18,7 @@ export function StatisticsPage({}: StatisticsPageProps) {
   const [activeTab, setActiveTab] = useState('overview');
   const [progressTrend, setProgressTrend] = useState<ProgressTrend[]>([]);
   const [skillLevels, setSkillLevels] = useState<SkillLevel[]>([]);
-  const [reportPeriod, setReportPeriod] = useState<ReportPeriod>('week');
+  const [reportPeriod, setReportPeriod] = useState<ReportPeriod>('weekly');
   const [showExportModal, setShowExportModal] = useState(false);
   
   const { stats, getProgressTrend, getSkillLevels, calculateDailyStats, getStreakDays } = useStatisticsStore();
@@ -145,54 +152,106 @@ export function StatisticsPage({}: StatisticsPageProps) {
     </div>
   );
 
-  const renderTrends = () => (
-    <div className="stats-trends">
-      <Card>
-        <CardHeader title="准确率趋势" subtitle="最近30天" />
-        <CardContent>
-          <div className="trend-chart">
-            {progressTrend.map((trend, index) => (
-              <div key={index} className="trend-bar-container">
-                <div
-                  className="trend-bar"
-                  style={{
-                    height: `${trend.accuracy}%`,
-                    backgroundColor: trend.accuracy > 80
-                      ? 'var(--color-status-success)'
-                      : trend.accuracy > 60
-                        ? 'var(--color-status-warning)'
-                        : 'var(--color-status-error)',
-                  }}
-                />
-                <span className="trend-label">{trend.date.slice(-2)}</span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+  const renderTrends = () => {
+    // Helper to get CSS variables
+    const getCssVar = (name: string, fallback: string) => {
+      if (typeof window === 'undefined') return fallback;
+      const val = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      return val || fallback;
+    };
 
-      <Card>
-        <CardHeader title="练习时长趋势" subtitle="最近30天" />
-        <CardContent>
-          <div className="trend-chart">
-            {progressTrend.map((trend, index) => {
-              const maxDuration = Math.max(...progressTrend.map(t => t.duration), 1);
-              const heightPercent = (trend.duration / maxDuration) * 100;
-              return (
-                <div key={index} className="trend-bar-container">
-                  <div
-                    className="trend-bar duration-bar"
-                    style={{ height: `${heightPercent}%` }}
-                  />
-                  <span className="trend-label">{trend.date.slice(-2)}</span>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+    const successColor = getCssVar('--color-status-success', 'green');
+    const warningColor = getCssVar('--color-status-warning', 'orange');
+    const errorColor = getCssVar('--color-status-error', 'red');
+    const accentColor = getCssVar('--color-accent-default', '#d4af37');
+
+    const accuracyData = {
+      labels: progressTrend.map(t => t.date.slice(-2)),
+      datasets: [{
+        label: '准确率',
+        data: progressTrend.map(t => t.accuracy),
+        borderColor: accentColor,
+        backgroundColor: 'rgba(212, 175, 55, 0.1)',
+        fill: true,
+        tension: 0.3,
+        pointBackgroundColor: progressTrend.map(t => 
+          t.accuracy > 80 ? successColor : t.accuracy > 60 ? warningColor : errorColor
+        ),
+        pointBorderColor: progressTrend.map(t => 
+          t.accuracy > 80 ? successColor : t.accuracy > 60 ? warningColor : errorColor
+        ),
+      }]
+    };
+
+    const durationData = {
+      labels: progressTrend.map(t => t.date.slice(-2)),
+      datasets: [{
+        label: '练习时长 (分钟)',
+        data: progressTrend.map(t => t.duration / 60),
+        backgroundColor: accentColor,
+      }]
+    };
+
+    const commonOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          mode: 'index' as const,
+          intersect: false,
+        },
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.05)' } },
+      },
+    };
+
+    const accuracyOptions = {
+      ...commonOptions,
+      scales: {
+        ...commonOptions.scales,
+        y: { 
+          min: 0, 
+          max: 100, 
+          grid: { color: 'rgba(255,255,255,0.05)' } 
+        },
+      },
+    };
+
+    const durationOptions = {
+      ...commonOptions,
+      scales: {
+        ...commonOptions.scales,
+        y: { 
+          beginAtZero: true,
+          grid: { color: 'rgba(255,255,255,0.05)' } 
+        },
+      },
+    };
+
+    return (
+      <div className="stats-trends">
+        <Card>
+          <CardHeader title="准确率趋势" subtitle="最近30天" />
+          <CardContent>
+            <div className="trend-chart" style={{ height: '200px' }}>
+              <Line data={accuracyData} options={accuracyOptions} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader title="练习时长趋势" subtitle="最近30天" />
+          <CardContent>
+            <div className="trend-chart" style={{ height: '200px' }}>
+              <Bar data={durationData} options={durationOptions} />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
 
   const renderSkills = () => (
     <div className="stats-skills">
@@ -255,7 +314,6 @@ export function StatisticsPage({}: StatisticsPageProps) {
           <p className="statistics-subtitle">追踪您的练习进度</p>
         </div>
         <div className="statistics-header-right">
-          <ThemeToggle />
           <Button variant="secondary" onClick={() => setShowExportModal(true)}>
             导出报告
           </Button>
@@ -291,25 +349,25 @@ export function StatisticsPage({}: StatisticsPageProps) {
                 <label className="export-label">选择报告周期:</label>
                 <div className="export-period-options">
                   <Button
-                    variant={reportPeriod === 'week' ? 'primary' : 'secondary'}
+                    variant={reportPeriod === 'weekly' ? 'primary' : 'secondary'}
                     size="small"
-                    onClick={() => setReportPeriod('week')}
+                    onClick={() => setReportPeriod('weekly')}
                   >
                     本周
                   </Button>
                   <Button
-                    variant={reportPeriod === 'month' ? 'primary' : 'secondary'}
+                    variant={reportPeriod === 'monthly' ? 'primary' : 'secondary'}
                     size="small"
-                    onClick={() => setReportPeriod('month')}
+                    onClick={() => setReportPeriod('monthly')}
                   >
                     本月
                   </Button>
                   <Button
-                    variant={reportPeriod === 'quarter' ? 'primary' : 'secondary'}
+                    variant={reportPeriod === 'custom' ? 'primary' : 'secondary'}
                     size="small"
-                    onClick={() => setReportPeriod('quarter')}
+                    onClick={() => setReportPeriod('custom')}
                   >
-                    本季度
+                    自定义
                   </Button>
                 </div>
               </div>
@@ -343,7 +401,7 @@ export function StatisticsPage({}: StatisticsPageProps) {
 
               <div className="export-preview">
                 <Card variant="outlined">
-                  <CardHeader title="报告预览" subtitle={`周期: ${reportPeriod === 'daily' ? '今日' : reportPeriod === 'weekly' ? '本周' : '本月'}`} />
+                  <CardHeader title="报告预览" subtitle={`周期: ${reportPeriod === 'daily' ? '今日' : reportPeriod === 'weekly' ? '本周' : reportPeriod === 'monthly' ? '本月' : '自定义'}`} />
                   <CardContent>
                     <div className="export-preview-stats">
                       <div className="export-preview-item">

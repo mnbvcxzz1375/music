@@ -1,11 +1,15 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import type { Language, TranslationStrings } from './types';
 import { zh } from './locales/zh';
 import { en } from './locales/en';
+import { ja } from './locales/ja';
+import { ko } from './locales/ko';
 
 const translations: Record<Language, TranslationStrings> = {
   zh,
   en,
+  ja,
+  ko,
 };
 
 const languageNames: Record<Language, string> = {

@@ -1,7 +1,9 @@
 import { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { Home, Music, BookOpen, BarChart, User, ArrowLeft } from 'lucide-react';
 import { ThemeToggle } from '../Theme';
 import { Navigation, NavItem } from '../UI';
+import { useI18n } from '@/i18n';
 
 export interface AppLayoutProps {
   children: ReactNode;
@@ -15,12 +17,13 @@ export function AppLayout({
   showFooter = true,
 }: AppLayoutProps) {
   const location = useLocation();
+  const { t } = useI18n();
   
   const navItems: NavItem[] = [
-    { id: 'home', label: '首页', href: '/', icon: <span>🏠</span> },
-    { id: 'practice', label: '练习', href: '/practice', icon: <span>🎵</span> },
-    { id: 'library', label: '曲库', href: '/library', icon: <span>📚</span> },
-    { id: 'statistics', label: '统计', href: '/statistics', icon: <span>📊</span> },
+    { id: 'home', label: t.nav.home, href: '/', icon: <Home size={18} /> },
+    { id: 'practice', label: t.nav.practice, href: '/practice', icon: <Music size={18} /> },
+    { id: 'library', label: t.nav.library, href: '/library', icon: <BookOpen size={18} /> },
+    { id: 'statistics', label: t.nav.statistics, href: '/statistics', icon: <BarChart size={18} /> },
   ];
   
   const getActiveId = () => {
@@ -56,7 +59,7 @@ export function AppLayout({
         <div className="app-header-right">
           <ThemeToggle />
           <Link to="/user" className="app-user-link">
-            <span className="app-user-icon">👤</span>
+            <span className="app-user-icon"><User size={20} /></span>
           </Link>
         </div>
       </header>
@@ -104,7 +107,7 @@ export function PageLayout({
           <div className="page-header-left">
             {backLink && (
               <Link to={backLink} className="page-back-link">
-                ← 返回
+                <ArrowLeft size={16} className="inline-icon" /> 返回
               </Link>
             )}
             <div className="page-title-group">

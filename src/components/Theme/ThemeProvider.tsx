@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { Sun, Moon, RotateCw } from 'lucide-react';
 import { useThemeStore, initTheme } from './ThemeStore';
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -26,10 +27,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 export function ThemeToggle() {
   const { theme, setTheme } = useThemeStore();
 
-  const themes: Array<{ value: import('./ThemeStore').Theme; label: string; icon: string }> = [
-    { value: 'light', label: '浅色', icon: '☀️' },
-    { value: 'dark', label: '深色', icon: '🌙' },
-    { value: 'auto', label: '自动', icon: '🔄' },
+  const themes: Array<{ value: import('./ThemeStore').Theme; label: string; icon: React.ReactNode }> = [
+    { value: 'light', label: '浅色', icon: <Sun size={16} /> },
+    { value: 'dark', label: '深色', icon: <Moon size={16} /> },
+    { value: 'auto', label: '自动', icon: <RotateCw size={16} /> },
   ];
 
   return (

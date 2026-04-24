@@ -1,4 +1,4 @@
-import type { TranslationStrings } from './types';
+import type { TranslationStrings } from '../types';
 
 export const zh: TranslationStrings = {
   common: {
@@ -289,6 +289,10 @@ export const zh: TranslationStrings = {
     you: '你',
   },
   user: {
+    login: '登录',
+    register: '注册',
+    password: '密码',
+    googleLogin: 'Google 登录',
     profile: '个人资料',
     avatar: '头像',
     username: '用户名',

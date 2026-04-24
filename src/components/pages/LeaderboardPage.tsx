@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, Tabs, TabItem } from '../UI';
-import { ThemeToggle } from '../Theme';
 import { useLeaderboardStore } from '@/services/leaderboard';
 import type { LeaderboardEntry } from '@/services/leaderboard/types';
 
@@ -82,9 +81,6 @@ export function LeaderboardPage({}: LeaderboardPageProps) {
           <p className="leaderboard-subtitle">
             {period === 'weekly' ? '本周排名' : '本月排名'}
           </p>
-        </div>
-        <div className="leaderboard-header-right">
-          <ThemeToggle />
         </div>
       </header>
 

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Button, Card, CardContent, CardHeader } from '../UI';
-import { ThemeToggle } from '../Theme';
 import { useStatisticsStore } from '@/services/statistics';
 import { useSubscriptionStore } from '@/services/subscription';
 import { PremiumFeatureGate, PremiumBadge } from '../premium';
@@ -143,7 +142,6 @@ export function AIAnalysisPage({}: AIAnalysisPageProps) {
             <h1>AI练习分析</h1>
             <PremiumBadge />
           </div>
-          <ThemeToggle />
         </header>
         <main className="ai-analysis-content">
           <div className="ai-loading">正在分析您的练习数据...</div>
@@ -159,7 +157,6 @@ export function AIAnalysisPage({}: AIAnalysisPageProps) {
           <h1>AI练习分析</h1>
           <PremiumBadge />
         </div>
-        <ThemeToggle />
       </header>
 
       <main className="ai-analysis-content">

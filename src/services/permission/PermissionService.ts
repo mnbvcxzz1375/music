@@ -72,7 +72,7 @@ export class PermissionService {
     return { allowed: true };
   }
 
-  checkPieceAccess(pieceId: string, isPremiumPiece: boolean): PermissionCheckResult {
+  checkPieceAccess(_pieceId: string, isPremiumPiece: boolean): PermissionCheckResult {
     const subscriptionStore = useSubscriptionStore.getState();
     
     if (!isPremiumPiece) {

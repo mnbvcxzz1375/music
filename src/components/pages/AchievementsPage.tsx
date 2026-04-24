@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Button, Card, CardContent, Tabs, TabItem } from '../UI';
-import { ThemeToggle } from '../Theme';
 import { useAchievementStore } from '@/services/achievements';
 import { AchievementCategory } from '@/services/achievements/types';
 
@@ -54,9 +53,6 @@ export function AchievementsPage({ onShare }: AchievementsPageProps) {
           <p className="achievements-subtitle">
             已解锁 {stats.unlockedAchievements}/{stats.totalAchievements} 个成就
           </p>
-        </div>
-        <div className="achievements-header-right">
-          <ThemeToggle />
         </div>
       </header>
 

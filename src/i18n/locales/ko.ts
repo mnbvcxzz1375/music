@@ -1,6 +1,6 @@
-import type { TranslationStrings } from '../types';
+﻿import type { TranslationStrings } from '../types';
 
-export const en: TranslationStrings = {
+export const ko: TranslationStrings = {
   common: {
     appName: 'Music Practice Assistant',
     loading: 'Loading...',
@@ -289,10 +289,10 @@ export const en: TranslationStrings = {
     you: 'You',
   },
   user: {
-    login: 'Log In',
+    login: 'Login',
     register: 'Register',
     password: 'Password',
-    googleLogin: 'Continue with Google',
+    googleLogin: 'Google Login',
     profile: 'Profile',
     avatar: 'Avatar',
     username: 'Username',

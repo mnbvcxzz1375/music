@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Button } from '../UI';
 import { useI18n, getAvailableLanguages, getLanguageName } from '@/i18n';
-import type { Language } from '@/i18n/types';
 
 export interface LanguageSelectorProps {
   variant?: 'dropdown' | 'buttons' | 'compact';

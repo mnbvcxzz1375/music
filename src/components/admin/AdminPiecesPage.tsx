@@ -1,24 +1,19 @@
 import { useState } from 'react';
 import { Button, Card, CardContent, CardHeader, Input, Tabs, TabItem } from '../UI';
-import { ThemeToggle } from '../Theme';
-import { usePieceStore } from '@/services/piece';
-import { usePermission } from '@/services/permission';
 import { OFFICIAL_PIECES, DIFFICULTY_LEVELS, GENRE_CATEGORIES, INSTRUMENT_CATEGORIES } from '@/services/piece/official-pieces';
-import type { Piece } from '@/services/piece/types';
+import type { Piece, InstrumentType, MusicGenre } from '@/services/piece/types';
 
 export interface AdminPiecesPageProps {}
 
 export function AdminPiecesPage({}: AdminPiecesPageProps) {
   const [activeTab, setActiveTab] = useState('list');
-  const [selectedPiece, setSelectedPiece] = useState<Piece | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterInstrument, setFilterInstrument] = useState<string | null>(null);
-  const [filterGenre, setFilterGenre] = useState<string | null>(null);
-  const [filterDifficulty, setFilterDifficulty] = useState<[number, number] | null>(null);
+  const [filterInstrument, setFilterInstrument] = useState<InstrumentType | null>(null);
+  const [filterGenre, setFilterGenre] = useState<MusicGenre | null>(null);
+  const [filterDifficulty] = useState<[number, number] | null>(null);
   const [filterPremium, setFilterPremium] = useState<boolean | null>(null);
+  const [_editPiece, setEditPiece] = useState<Piece | null>(null);
   
-  const { isPremium } = usePermission();
-
   const tabs: TabItem[] = [
     { id: 'list', label: '曲目列表' },
     { id: 'add', label: '添加曲目' },
@@ -67,7 +62,7 @@ export function AdminPiecesPage({}: AdminPiecesPageProps) {
         <div className="admin-pieces-filters">
           <select 
             value={filterInstrument || ''} 
-            onChange={(e) => setFilterInstrument(e.target.value || null)}
+            onChange={(e) => setFilterInstrument((e.target.value || null) as InstrumentType | null)}
             className="admin-filter-select"
           >
             <option value="">全部乐器</option>
@@ -78,7 +73,7 @@ export function AdminPiecesPage({}: AdminPiecesPageProps) {
           
           <select 
             value={filterGenre || ''} 
-            onChange={(e) => setFilterGenre(e.target.value || null)}
+            onChange={(e) => setFilterGenre((e.target.value || null) as MusicGenre | null)}
             className="admin-filter-select"
           >
             <option value="">全部风格</option>
@@ -139,7 +134,7 @@ export function AdminPiecesPage({}: AdminPiecesPageProps) {
             <div className="admin-table-col">{piece.playCount}</div>
             <div className="admin-table-col">{piece.favoriteCount}</div>
             <div className="admin-table-col">
-              <Button variant="ghost" size="small" onClick={() => setSelectedPiece(piece)}>
+              <Button variant="ghost" size="small" onClick={() => setEditPiece(piece)}>
                 编辑
               </Button>
             </div>
@@ -264,7 +259,7 @@ export function AdminPiecesPage({}: AdminPiecesPageProps) {
                 </div>
                 <span className="admin-category-desc">{cat.description}</span>
                 <span className="admin-category-count">
-                  {OFFICIAL_PIECES.filter(p => p.genres.includes(cat.id)).length} 首
+                  {OFFICIAL_PIECES.filter(p => p.genres.includes(cat.id as MusicGenre)).length} 首
                 </span>
               </div>
             ))}
@@ -282,7 +277,7 @@ export function AdminPiecesPage({}: AdminPiecesPageProps) {
                   <span className="admin-category-label">{cat.label}</span>
                 </div>
                 <span className="admin-category-count">
-                  {OFFICIAL_PIECES.filter(p => p.instrumentTypes.includes(cat.id)).length} 首
+                  {OFFICIAL_PIECES.filter(p => p.instrumentTypes.includes(cat.id as InstrumentType)).length} 首
                 </span>
               </div>
             ))}
@@ -376,9 +371,6 @@ export function AdminPiecesPage({}: AdminPiecesPageProps) {
         <div className="admin-header-left">
           <h1 className="admin-title">曲库管理</h1>
           <p className="admin-subtitle">管理官方曲库内容</p>
-        </div>
-        <div className="admin-header-right">
-          <ThemeToggle />
         </div>
       </header>
 

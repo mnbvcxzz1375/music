@@ -1,4 +1,4 @@
-import type { Piece } from '@/services/piece/types';
+import type { Piece, MusicGenre, InstrumentType } from '@/services/piece/types';
 
 export const OFFICIAL_PIECES: Piece[] = [
   {
@@ -285,11 +285,11 @@ export function getOfficialPiecesByDifficulty(min: number, max: number): Piece[]
   return OFFICIAL_PIECES.filter(p => p.difficulty >= min && p.difficulty <= max);
 }
 
-export function getOfficialPiecesByGenre(genre: string): Piece[] {
+export function getOfficialPiecesByGenre(genre: MusicGenre): Piece[] {
   return OFFICIAL_PIECES.filter(p => p.genres.includes(genre));
 }
 
-export function getOfficialPiecesByInstrument(instrument: string): Piece[] {
+export function getOfficialPiecesByInstrument(instrument: InstrumentType): Piece[] {
   return OFFICIAL_PIECES.filter(p => p.instrumentTypes.includes(instrument));
 }
 

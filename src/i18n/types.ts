@@ -289,6 +289,10 @@ export interface TranslationStrings {
     you: string;
   };
   user: {
+    login: string;
+    register: string;
+    password: string;
+    googleLogin: string;
     profile: string;
     avatar: string;
     username: string;

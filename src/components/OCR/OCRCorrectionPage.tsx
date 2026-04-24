@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
 import { Button, Card, CardContent, CardHeader, CardFooter, Input } from '../UI';
-import { ThemeToggle } from '../Theme';
 import { useOCRStore } from '@/services/ocr';
 import { DetectedElement, OCRError } from '@/services/ocr/types';
 
@@ -62,7 +61,6 @@ export function OCRCorrectionPage({ onComplete, onCancel }: OCRCorrectionPagePro
       <div className="ocr-page">
         <header className="ocr-header">
           <h1 className="ocr-title">OCR 乐谱导入</h1>
-          <ThemeToggle />
         </header>
         
         <main className="ocr-content">
@@ -125,7 +123,6 @@ export function OCRCorrectionPage({ onComplete, onCancel }: OCRCorrectionPagePro
         <header className="ocr-header">
           <h1 className="ocr-title">OCR 校对</h1>
           <div className="ocr-header-actions">
-            <ThemeToggle />
             <Button variant="ghost" onClick={reset}>
               重新上传
             </Button>
