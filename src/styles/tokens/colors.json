@@ -1,0 +1,47 @@
+{
+  "color": {
+    "bg": {
+      "primary": {
+        "dark": { "value": "#0a0a0a" },
+        "light": { "value": "#ffffff" }
+      },
+      "secondary": {
+        "dark": { "value": "#161616" },
+        "light": { "value": "#f5f5f5" }
+      },
+      "tertiary": {
+        "dark": { "value": "#222222" },
+        "light": { "value": "#e5e5e5" }
+      }
+    },
+    "text": {
+      "primary": {
+        "dark": { "value": "#f2f2f2" },
+        "light": { "value": "#1a1a1a" }
+      },
+      "secondary": {
+        "dark": { "value": "#a1a1aa" },
+        "light": { "value": "#666666" }
+      }
+    },
+    "accent": {
+      "default": { "value": "#d4af37" },
+      "hover": { "value": "#b8972e" }
+    },
+    "status": {
+      "success": { "value": "#2e8b57" },
+      "warning": { "value": "#d97706" },
+      "error": { "value": "#c53030" }
+    },
+    "border": {
+      "dark": { "value": "rgba(255, 255, 255, 0.1)" },
+      "light": { "value": "rgba(0, 0, 0, 0.1)" }
+    },
+    "pitch": {
+      "accurate": { "value": "#2e8b57" },
+      "slight": { "value": "#d97706" },
+      "moderate": { "value": "#c53030" },
+      "severe": { "value": "#c53030" }
+    }
+  }
+}

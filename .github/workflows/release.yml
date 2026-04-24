@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.1)'
+        required: true
+        type: string
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Update version
+        run: |
+          npm version ${{ inputs.version }} --no-git-tag-version
+          echo "VERSION=${{ inputs.version }}" >> $GITHUB_ENV
+      
+      - name: Commit version change
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add package.json
+          git commit -m "Release v${{ env.VERSION }}"
+          git tag v${{ env.VERSION }}
+          git push origin main --tags
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: Release v${{ env.VERSION }}
+          body: |
+            ## Changes
+            
+            See [CHANGELOG.md](CHANGELOG.md) for details.
+            
+            ## Installation
+            
+            ### Docker
+            ```bash
+            docker pull your-username/music-practice:v${{ env.VERSION }}
+            ```
+            
+            ### NPM
+            ```bash
+            npm install music-practice-app@${{ env.VERSION }}
+            ```
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

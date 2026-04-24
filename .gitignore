@@ -1,0 +1,221 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+*.tsbuildinfo
+
+# Local environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# Keep example env files
+!.env.example
+!.env.development
+!.env.production
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# Test results
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+.temp/
+
+# History files (VS Code Local History)
+.history/
+
+# Claude/Trae/Sisyphus config (local settings)
+.claude/settings.local.json
+.sisyphus/
+.trae/
+
+# Lock files (keep package-lock.json)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional stylelint cache
+.stylelintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache
+.parcel-cache
+
+# Next.js build output
+.next/
+out/
+
+# Nuxt.js build / generate output
+.nuxt/
+
+# Gatsby files
+.cache/
+public/
+
+# vuepress build output
+.vuepress/dist
+
+# Serverless directories
+.serverless/
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# Tauri
+src-tauri/target/
+
+# Docker volumes (local)
+.docker/
+
+# PWA files
+**/sw.js
+**/workbox-*.js
+**/workbox-sw.js
+**/service-worker.js
+
+# Secrets and credentials
+*.pem
+*.key
+*.cert
+*.crt
+secrets/
+credentials/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Compressed files
+*.zip
+*.tar
+*.gz
+*.rar
+
+# Debug files
+debug/
+*.dmp
+
+# Cache directories
+.cache/
+.parcel-cache/
+.vite/
+
+# TypeScript
+*.tsbuildinfo
+
+# Electron
+release/
+*.asar
+
+# Capacitor
+capacitor.local.json
+
+# Native builds
+android/
+ios/
+
+# Generated files
+*.generated.*
+generated/
+
+# Documentation build
+docs/_build/
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+ENV/
+
+# Misc
+*.seed
+*.log
+.DS_Store
