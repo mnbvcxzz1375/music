@@ -2027,13 +2027,56 @@ input[type='range']::-webkit-slider-runnable-track {
 .app-user-link {
   display: flex;
   align-items: center;
+  justify-content: center;
   padding: var(--spacing-2);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
   transition: background var(--transition-fast);
+  color: var(--color-accent-default);
 }
 
 .app-user-link:hover {
   background: var(--color-bg-tertiary);
+}
+
+/* 会员导航链接 - 金色按钮样式 */
+.membership-link {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-1) var(--spacing-3);
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #1a1a1a;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+  transition: all var(--transition-normal);
+  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.3);
+}
+
+.membership-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(245, 158, 11, 0.4);
+}
+
+/* 深色主题优化 */
+[data-theme='dark'] .membership-link {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #1f1f1f;
+  box-shadow: 0 1px 3px rgba(251, 191, 36, 0.3);
+}
+
+[data-theme='dark'] .membership-link:hover {
+  background: linear-gradient(135deg, #fcd34d, #fbbf24);
+  box-shadow: 0 3px 8px rgba(251, 191, 36, 0.4);
+}
+
+[data-theme='dark'] .app-user-link {
+  color: #fbbf24;
+}
+
+[data-theme='dark'] .app-user-link:hover {
+  background: rgba(251, 191, 36, 0.1);
 }
 
 .app-user-icon {
@@ -3575,12 +3618,54 @@ input[type='range']::-webkit-slider-runnable-track {
 }
 
 .payment-modal {
-  background: var(--color-bg-secondary);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--color-bg-primary);
   border: 1px solid var(--color-border-default);
-  width: 100%;
-  max-width: 400px;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-8);
+  z-index: var(--z-index-modal);
+  min-width: 320px;
+}
+
+.payment-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: var(--z-index-modal);
+}
+
+.payment-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-4);
+}
+
+.payment-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.mock-payment-notice {
+  background: var(--color-accent-subtle);
+  border: 1px solid var(--color-accent-default);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-xl);
+  padding: var(--spacing-3) var(--spacing-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+
+.payment-methods {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
 }
 
 .payment-modal-header {

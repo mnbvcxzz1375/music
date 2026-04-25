@@ -36,6 +36,31 @@ export const useAuthStore = create<AuthStore>()(
             body: JSON.stringify(credentials),
           });
 
+          // Check if response is actually JSON (not HTML from Vite)
+          const contentType = response.headers.get('content-type');
+          if (!contentType || !contentType.includes('application/json')) {
+            // Mock login fallback when backend not available
+            const mockUser: User = {
+              id: 'mock-user-123',
+              email: credentials.email || 'user@mock.dev',
+              nickname: (credentials.email || 'user@mock.dev').split('@')[0],
+              instrument: 'piano',
+              level: 'beginner',
+              subscription: 'free',
+              createdAt: new Date(),
+              lastLoginAt: new Date(),
+              settings: { theme: 'auto', language: 'zh-CN', defaultTempo: 120, pitchTolerance: 50, timingTolerance: 100, showHints: true, autoAdvance: false, retryLimit: 3 },
+            };
+            set({
+              user: mockUser,
+              accessToken: 'mock-token-' + Date.now(),
+              refreshToken: 'mock-refresh-' + Date.now(),
+              isAuthenticated: true,
+              loading: false,
+            });
+            return;
+          }
+
           if (!response.ok) {
             const error = await response.json();
             throw new Error(error.message || '登录失败');
@@ -63,6 +88,31 @@ export const useAuthStore = create<AuthStore>()(
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(credentials),
           });
+
+          // Check if response is actually JSON (not HTML from Vite)
+          const contentType = response.headers.get('content-type');
+          if (!contentType || !contentType.includes('application/json')) {
+            // Mock register fallback when backend not available
+            const mockUser: User = {
+              id: 'mock-user-' + Date.now(),
+              email: credentials.email || 'user@mock.dev',
+              nickname: credentials.nickname || (credentials.email || 'user@mock.dev').split('@')[0],
+              instrument: 'piano',
+              level: 'beginner',
+              subscription: 'free',
+              createdAt: new Date(),
+              lastLoginAt: new Date(),
+              settings: { theme: 'auto', language: 'zh-CN', defaultTempo: 120, pitchTolerance: 50, timingTolerance: 100, showHints: true, autoAdvance: false, retryLimit: 3 },
+            };
+            set({
+              user: mockUser,
+              accessToken: 'mock-token-' + Date.now(),
+              refreshToken: 'mock-refresh-' + Date.now(),
+              isAuthenticated: true,
+              loading: false,
+            });
+            return;
+          }
 
           if (!response.ok) {
             const error = await response.json();

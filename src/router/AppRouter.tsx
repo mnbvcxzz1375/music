@@ -21,6 +21,14 @@ import { AdvancedStatisticsPage } from '@/components/premium';
 import { useAuthStore } from '@/services/auth';
 import { useSubscriptionStore } from '@/services/subscription';
 
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAuthStore();
+  if (!isAuthenticated) {
+    return <Navigate to="/user" replace />;
+  }
+  return <>{children}</>;
+}
+
 function RequirePremium({ children }: { children: React.ReactNode }) {
   const { isPremium } = useSubscriptionStore();
   if (!isPremium()) {
@@ -56,7 +64,14 @@ export function AppRouter() {
             } 
           />
           <Route path="/user" element={<AppLayout><UserPage /></AppLayout>} />
-          <Route path="/subscription" element={<AppLayout><SubscriptionPage /></AppLayout>} />
+          <Route 
+            path="/subscription" 
+            element={
+              <RequireAuth>
+                <AppLayout><SubscriptionPage /></AppLayout>
+              </RequireAuth>
+            } 
+          />
           <Route path="/user/achievements" element={<AppLayout><AchievementsPage /></AppLayout>} />
           <Route path="/checkin" element={<AppLayout><CheckinPage /></AppLayout>} />
           <Route path="/leaderboard" element={<AppLayout><LeaderboardPage /></AppLayout>} />

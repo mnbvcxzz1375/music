@@ -267,25 +267,32 @@ export function SubscriptionPage({ onSelectPlan }: SubscriptionPageProps) {
       </main>
 
       {showPaymentModal && selectedPlanId && (
-        <div className="payment-modal-overlay">
-          <div className="payment-modal">
+        <div className="payment-modal-overlay" onClick={() => setShowPaymentModal(false)}>
+          <div className="payment-modal" onClick={(e) => e.stopPropagation()}>
             <div className="payment-modal-header">
-              <h2>完成订阅</h2>
+              <div>
+                <h2 className="mb-2">模拟支付体验</h2>
+                <p className="text-sm text-gray-500">
+                  💡 当前为前端演示环境，支付仅为模拟体验
+                </p>
+              </div>
               <Button variant="ghost" size="small" onClick={() => setShowPaymentModal(false)}>
                 关闭
               </Button>
             </div>
             <div className="payment-modal-body">
-              <p>选择支付方式：</p>
+              <div className="mock-payment-notice">
+                <p>✓ 点击任意支付方式将立即开通会员（模拟）</p>
+              </div>
               <div className="payment-methods">
-                <Button variant="primary" onClick={() => handlePayment('stripe_card')}>
-                  💳 信用卡支付
-                </Button>
-                <Button variant="secondary" onClick={() => handlePayment('alipay')}>
+                <Button variant="primary" fullWidth onClick={() => handlePayment('alipay')}>
                   支付宝
                 </Button>
-                <Button variant="secondary" onClick={() => handlePayment('wechat')}>
+                <Button variant="secondary" fullWidth onClick={() => handlePayment('wechat')}>
                   微信支付
+                </Button>
+                <Button variant="secondary" fullWidth onClick={() => handlePayment('stripe')}>
+                  💳 信用卡
                 </Button>
               </div>
             </div>

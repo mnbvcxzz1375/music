@@ -4,7 +4,6 @@ import { Home, Music, BookOpen, BarChart, User, ArrowLeft, Crown } from 'lucide-
 import { ThemeToggle } from '../Theme';
 import { Navigation, NavItem } from '../UI';
 import { useI18n } from '@/i18n';
-import { useSubscriptionStore } from '@/services/subscription';
 
 export interface AppLayoutProps {
   children: ReactNode;
@@ -19,7 +18,6 @@ export function AppLayout({
 }: AppLayoutProps) {
   const location = useLocation();
   const { t } = useI18n();
-  const { isPremium } = useSubscriptionStore();
   
   const navItems: NavItem[] = [
     { id: 'home', label: t.nav.home, href: '/', icon: <Home size={18} /> },
@@ -59,13 +57,13 @@ export function AppLayout({
         )}
         
         <div className="app-header-right">
-          {/* 会员入口 - 始终可见 */}
+          {/* 会员入口 */}
           <Link 
             to="/subscription" 
-            className={`membership-link ${isPremium() ? 'is-premium' : ''}`}
+            className="membership-link"
           >
-            <Crown size={16} />
-            <span>{isPremium() ? '会员' : '升级会员'}</span>
+            <Crown size={18} />
+            <span>升级VIP</span>
           </Link>
           <ThemeToggle />
           <Link to="/user" className="app-user-link">
