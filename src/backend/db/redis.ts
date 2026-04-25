@@ -1,14 +1,38 @@
-import Redis from 'ioredis';
-import type { Redis as RedisType } from 'ioredis';
+import { createClient } from 'redis';
 
-export interface RedisConfig {
-  host: string;
-  port: number;
-  password?: string;
-  db: number;
-  keyPrefix: string;
-  retryDelayOnFailover: number;
-  maxRetriesPerRequest: number;
+const redisClient = createClient({
+  url: process.env.REDIS_URL || 'redis://localhost:6379',
+  socket: {
+    connectTimeout: 5000,
+    reconnectStrategy: (retries) => {
+      // Exponential backoff
+      return Math.min(retries * 50, 2000);
+    },
+  },
+});
+
+redisClient.on('error', (err) => console.error('Redis Client Error', err));
+redisClient.on('connect', () => console.log('Connected to Redis'));
+
+// Initialize connection
+const initRedis = async (): Promise<void> => {
+  if (!redisClient.isOpen) {
+    await redisClient.connect();
+  }
+};
+
+export { redisClient, initRedis };
+
+// Health check
+export async function checkRedis(): Promise<boolean> {
+  try {
+    if (!redisClient.isOpen) return false;
+    const pong = await redisClient.ping();
+    return pong === 'PONG';
+  } catch (error) {
+    console.error('Redis health check failed:', error);
+    return false;
+  }
 }
 
 const defaultConfig: RedisConfig = {

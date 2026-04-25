@@ -1,16 +1,76 @@
-import pg from 'pg';
-import type { Pool, PoolClient, QueryResult } from 'pg';
+import { Pool, PoolClient, QueryResult } from 'pg';
 
-export interface DatabaseConfig {
+interface DatabaseConfig {
   host: string;
   port: number;
-  database: string;
   user: string;
   password: string;
-  maxConnections: number;
-  idleTimeoutMs: number;
-  connectionTimeoutMs: number;
+  database: string;
+  ssl?: boolean;
+  connectionTimeoutMillis?: number;
+  idleTimeoutMillis?: number;
 }
+
+const config: DatabaseConfig = {
+  host: process.env.DB_HOST || 'localhost',
+  port: parseInt(process.env.DB_PORT || '5432'),
+  user: process.env.DB_USER || 'music_master',
+  password: process.env.DB_PASSWORD || 'secret123',
+  database: process.env.DB_NAME || 'musicdb',
+  ssl: process.env.DB_SSL === 'true',
+  connectionTimeoutMillis: 5000,
+  idleTimeoutMillis: 30000,
+};
+
+const pool = new Pool(config);
+
+export default pool;
+
+// Helper method to query
+export async function query(text: string, params: any[] = []): Promise<QueryResult> {
+  const start = Date.now();
+  try {
+    const res = await pool.query(text, params);
+    const duration = Date.now() - start;
+    console.log('Database query', { text, duration, rows: res.rowCount });
+    return res;
+  } catch (error) {
+    console.error('Database query error:', error);
+    throw error;
+  }
+}
+
+// Helper method to get a client
+export async function getClient(): Promise<PoolClient> {
+  return pool.connect();
+}
+
+// Health check
+export async function checkConnection(): Promise<boolean> {
+  try {
+    const res = await pool.query('SELECT NOW()');
+    return res.rows.length > 0;
+  } catch (error) {
+    // Do not throw to allow health check endpoints to report "unhealthy"
+    console.error('Database health check failed:', error);
+    return false;
+  }
+}
+
+// Cleanup on exit
+process.on('SIGTERM', () => {
+  console.info('SIGTERM received. Shutting down gracefully...');
+  pool.end(() => {
+    console.log('Database pool has ended');
+  });
+});
+
+process.on('SIGINT', () => {
+  console.info('SIGINT received. Shutting down gracefully...');
+  pool.end(() => {
+    console.log('Database pool has ended');
+  });
+});
 
 const defaultConfig: DatabaseConfig = {
   host: process.env.DB_HOST || 'localhost',
