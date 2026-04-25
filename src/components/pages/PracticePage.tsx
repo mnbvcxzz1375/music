@@ -17,6 +17,8 @@ import type { PracticeSession } from '@/services/statistics/types';
 import { useAchievementStore } from '@/services/achievements';
 import { usePieceStore } from '@/services/piece';
 import { Score } from '@/types/score';
+import { useSubscriptionStore } from '@/services/subscription';
+import { Crown } from 'lucide-react';
 
 export interface PracticePageProps {
   xmlContent?: string;
@@ -61,6 +63,7 @@ export function PracticePage({ xmlContent, onComplete }: PracticePageProps) {
   const { addSession, stats } = useStatisticsStore();
   const { checkAchievements } = useAchievementStore();
   const { fetchPieceById, currentPiece } = usePieceStore();
+  const { isPremium } = useSubscriptionStore();
 
   const defaultXml = `<?xml version="1.0" encoding="UTF-8"?>
 <score-partwise version="3.1">
@@ -291,6 +294,10 @@ export function PracticePage({ xmlContent, onComplete }: PracticePageProps) {
           <p className="practice-piece-name">{pieceTitle}</p>
         </div>
         <div className="practice-header-right">
+          <div className={`membership-status ${isPremium() ? 'is-premium' : ''}`}>
+            <Crown size={16} />
+            <span>{isPremium() ? '会员' : '升级VIP'}</span>
+          </div>
           <Button variant="ghost" onClick={() => setShowCalibration(true)}>
             校准
           </Button>

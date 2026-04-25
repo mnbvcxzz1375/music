@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Settings, CreditCard, BarChart } from 'lucide-react';
+import { User, Settings, CreditCard, BarChart, Crown } from 'lucide-react';
 import { Button, Card, CardContent, Input, Tabs, TabItem } from '../UI';
 import { useAuthStore } from '@/services/auth';
 import { useI18n } from '@/i18n';
+import { useSubscriptionStore } from '@/services/subscription';
 
 export interface UserPageProps {
   onSuccess?: () => void;
@@ -15,6 +16,7 @@ export function UserPage({ onSuccess }: UserPageProps) {
   const navigate = useNavigate();
   
   const { isAuthenticated, user, logout } = useAuthStore();
+  const { isPremium, currentStatus } = useSubscriptionStore();
 
   const handleLogout = () => {
     logout();
@@ -37,6 +39,31 @@ export function UserPage({ onSuccess }: UserPageProps) {
         </header>
 
         <main className="user-content">
+          <Card variant="outlined">
+            <CardContent>
+              <div className="membership-card">
+                <div className="membership-card-left">
+                  <div className="membership-card-title">
+                    <Crown size={18} />
+                    <span>{isPremium() ? '会员' : '免费用户'}</span>
+                  </div>
+                  <div className="membership-card-subtitle">
+                    {isPremium()
+                      ? `当前方案：${currentStatus?.plan?.name || 'Premium'}`
+                      : '升级VIP解锁高级分析、AI建议、VIP曲目等功能'}
+                  </div>
+                </div>
+                <div className="membership-card-right">
+                  <Link to="/subscription">
+                    <Button variant={isPremium() ? 'secondary' : 'primary'}>
+                      {isPremium() ? '会员中心' : '升级VIP'}
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card variant="elevated">
             <CardContent>
               <div className="user-profile">
@@ -63,12 +90,12 @@ export function UserPage({ onSuccess }: UserPageProps) {
               </Card>
             </Link>
 
-            <Link to="/user/subscription">
+            <Link to="/subscription">
               <Card variant="outlined" hoverable>
                 <CardContent>
                   <div className="user-action-item">
                     <span className="user-action-icon"><CreditCard size={20} /></span>
-                    <span className="user-action-label">订阅管理</span>
+                    <span className="user-action-label">{isPremium() ? '会员中心' : '升级VIP'}</span>
                   </div>
                 </CardContent>
               </Card>

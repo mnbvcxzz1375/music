@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Music, Clock, Play, Star } from 'lucide-react';
+import { Search, Music, Clock, Play, Star, Crown } from 'lucide-react';
 import { Button, Card, CardContent, CardHeader, Input, Tabs, TabItem } from '../UI';
 import { usePieceStore } from '@/services/piece';
 import type { Piece, PieceFilter, InstrumentType, MusicGenre } from '@/services/piece/types';
@@ -361,7 +361,10 @@ export function LibraryPage({ onSelectPiece }: LibraryPageProps) {
                 action={
                   <div className="piece-header-actions">
                     {piece.isPremium && (
-                      <span className="piece-premium-badge">高级</span>
+                      <span className="premium-badge premium-badge-small">
+                        <Crown size={14} />
+                        VIP
+                      </span>
                     )}
                     <span className={getDifficultyClass(piece.difficulty)}>
                       {getDifficultyLabel(piece.difficulty)}
