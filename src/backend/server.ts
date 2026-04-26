@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 
 import authRoutes from './routes/auth';
+import pieceRoutes from './routes/pieces';
 import { testConnection } from './db/connection';
 import { initRedis, testRedisConnection } from './db/redis';
 import { errorHandler, requestLogger } from './middleware/errorHandler';
@@ -28,6 +29,7 @@ app.use(limiter);
 
 // Routes
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/pieces', pieceRoutes);
 
 // Health Check Route
 app.get('/api/health', async (_req: Request, res: Response) => {
@@ -53,7 +55,7 @@ app.get('/api/health', async (_req: Request, res: Response) => {
 
 // Root Route
 app.get('/', (_req: Request, res: Response) => {
-  res.send('Music Practice App Backend - Phase 9.2 Ready');
+  res.send('Music Practice App Backend - Phase 9.3');
 });
 
 // Error Handler
@@ -62,10 +64,9 @@ app.use(errorHandler);
 // Start Server
 const startServer = async () => {
   try {
-    // Initialize Redis connection
+    // Initialize connections
     await initRedis();
     
-    // Test DB and Redis connections on startup
     const dbOk = await testConnection();
     const redisOk = await testRedisConnection();
     
@@ -78,6 +79,8 @@ const startServer = async () => {
     app.listen(port, () => {
       console.log(`Backend server running at http://localhost:${port}`);
       console.log(`Health check available at http://localhost:${port}/api/health`);
+      console.log(`Auth routes mounted at /api/v1/auth`);
+      console.log(`Piece routes mounted at /api/v1/pieces`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);

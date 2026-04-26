@@ -1,11 +1,14 @@
 import { Router, Request, Response } from 'express';
 import { PieceService } from '../services/PieceService';
 import { authMiddleware } from '../middleware/authMiddleware';
-import { permissionMiddleware } from '../middleware/permissionMiddleware';
+import { upload } from '../middleware/upload';
 
 const router = Router();
 const pieceService = new PieceService();
 
+/**
+ * Get all pieces (with filters)
+ */
 router.get('/', async (req: Request, res: Response) => {
   try {
     const { page, limit, sortBy, sortOrder, instrument, genre, difficultyMin, difficultyMax, search, isOfficial } = req.query;
@@ -37,6 +40,9 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * Get official pieces
+ */
 router.get('/official', async (req: Request, res: Response) => {
   try {
     const { page, limit } = req.query;
@@ -58,6 +64,9 @@ router.get('/official', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * Search pieces
+ */
 router.get('/search', async (req: Request, res: Response) => {
   try {
     const { q, page, limit } = req.query;
@@ -86,10 +95,12 @@ router.get('/search', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * Get piece by ID
+ */
 router.get('/:id', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const piece = await pieceService.getPieceById(id);
+    const piece = await pieceService.getPieceById(req.params.id);
     
     if (!piece) {
       return res.status(404).json({
@@ -110,15 +121,18 @@ router.get('/:id', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/', authMiddleware, async (req: Request, res: Response) => {
+/**
+ * Create a new piece (requires auth and file upload)
+ */
+router.post('/', authMiddleware, upload.single('file'), async (req: Request, res: Response) => {
   try {
     const userId = req.user?.userId;
-    const { title, composer, musicXmlContent, instrumentTypes, genres, difficulty, tags } = req.body;
+    const { title, composer, instrumentTypes, genres, difficulty, tags } = req.body;
     
-    if (!title || !musicXmlContent) {
+    if (!title || !req.file) {
       return res.status(400).json({
         success: false,
-        error: { code: 5002, message: 'Title and MusicXML content are required' },
+        error: { code: 5002, message: 'Title and file are required' },
       });
     }
     
@@ -126,11 +140,11 @@ router.post('/', authMiddleware, async (req: Request, res: Response) => {
       userId,
       title,
       composer,
-      musicXmlContent,
-      instrumentTypes,
-      genres,
-      difficulty,
-      tags,
+      filePath: req.file.path.replace(process.cwd(), ''),
+      instrumentTypes: instrumentTypes ? JSON.parse(instrumentTypes) : undefined,
+      genres: genres ? JSON.parse(genres) : undefined,
+      difficulty: difficulty ? parseInt(difficulty) : undefined,
+      tags: tags ? JSON.parse(tags) : undefined,
     });
     
     res.status(201).json({
@@ -145,51 +159,13 @@ router.post('/', authMiddleware, async (req: Request, res: Response) => {
   }
 });
 
-router.put('/:id', authMiddleware, async (req: Request, res: Response) => {
-  try {
-    const userId = req.user?.userId;
-    const { id } = req.params;
-    const updates = req.body;
-    
-    const piece = await pieceService.updatePiece(id, userId, updates);
-    
-    res.json({
-      success: true,
-      data: piece,
-    });
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      error: { code: 5001, message: error instanceof Error ? error.message : 'Update failed' },
-    });
-  }
-});
-
-router.delete('/:id', authMiddleware, async (req: Request, res: Response) => {
-  try {
-    const userId = req.user?.userId;
-    const { id } = req.params;
-    
-    await pieceService.deletePiece(id, userId);
-    
-    res.json({
-      success: true,
-      data: { message: 'Piece deleted successfully' },
-    });
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      error: { code: 5001, message: error instanceof Error ? error.message : 'Deletion failed' },
-    });
-  }
-});
-
+/**
+ * Toggle favorite status of a piece (requires auth)
+ */
 router.post('/:id/favorite', authMiddleware, async (req: Request, res: Response) => {
   try {
     const userId = req.user?.userId;
-    const { id } = req.params;
-    
-    const result = await pieceService.toggleFavorite(userId, id);
+    const result = await pieceService.toggleFavorite(userId, req.params.id);
     
     res.json({
       success: true,
@@ -199,23 +175,6 @@ router.post('/:id/favorite', authMiddleware, async (req: Request, res: Response)
     res.status(400).json({
       success: false,
       error: { code: 5001, message: error instanceof Error ? error.message : 'Favorite toggle failed' },
-    });
-  }
-});
-
-router.get('/favorites', authMiddleware, async (req: Request, res: Response) => {
-  try {
-    const userId = req.user?.userId;
-    const favorites = await pieceService.getFavorites(userId);
-    
-    res.json({
-      success: true,
-      data: favorites,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: { code: 6001, message: 'Failed to get favorites' },
     });
   }
 });
