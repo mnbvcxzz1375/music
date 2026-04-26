@@ -38,8 +38,12 @@ export const useAuthStore = create<AuthStore>()(
 
           // Check if response is actually JSON (not HTML from Vite)
           const contentType = response.headers.get('content-type');
-          if (!contentType || !contentType.includes('application/json')) {
-            // Mock login fallback when backend not available
+          if (
+            (!contentType || !contentType.includes('application/json')) &&
+            import.meta.env.DEV &&
+            import.meta.env.VITE_ALLOW_MOCK_AUTH === 'true'
+          ) {
+            // Mock login fallback when backend not available (DEV ONLY)
             const mockUser: User = {
               id: 'mock-user-123',
               email: credentials.email || 'user@mock.dev',
@@ -91,8 +95,12 @@ export const useAuthStore = create<AuthStore>()(
 
           // Check if response is actually JSON (not HTML from Vite)
           const contentType = response.headers.get('content-type');
-          if (!contentType || !contentType.includes('application/json')) {
-            // Mock register fallback when backend not available
+          if (
+            (!contentType || !contentType.includes('application/json')) &&
+            import.meta.env.DEV &&
+            import.meta.env.VITE_ALLOW_MOCK_AUTH === 'true'
+          ) {
+            // Mock register fallback when backend not available (DEV ONLY)
             const mockUser: User = {
               id: 'mock-user-' + Date.now(),
               email: credentials.email || 'user@mock.dev',

@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import type { Piece } from '@/services/piece/types';
+import { usePieceStore } from '@/services/piece';
 import {
   OCRStatus,
   OCRResult,
@@ -24,6 +26,7 @@ interface OCRState {
   getErrorsByType: () => Record<OCRError['type'], number>;
   
   exportXml: () => string | null;
+  saveToLibrary: () => Promise<void>;
 }
 
 const generateId = () => `ocr-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -182,6 +185,35 @@ export const useOCRStore = create<OCRState>()(
       const result = get().result;
       if (!result || get().status !== 'completed') return null;
       return result.generatedXml;
+    },
+
+    saveToLibrary: async () => {
+      const result = get().result;
+      const xml = get().exportXml();
+      if (!result || !xml) return;
+
+      // Create a local Piece from OCR result and add to piece store
+      const newPiece: Piece = {
+        id: `ocr-${Date.now()}`,
+        title: `OCR识别 (${new Date().toLocaleDateString()})`,
+        composer: 'OCR 导入',
+        difficulty: 3,
+        instrumentTypes: ['piano'],
+        genres: ['classical'],
+        durationSeconds: 120,
+        musicXmlUrl: `data:application/xml;charset=utf-8,${encodeURIComponent(xml)}`,
+        tags: ['ocr'],
+        isPremium: false,
+        isOfficial: false,
+        playCount: 0,
+        favoriteCount: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      usePieceStore.setState((state) => ({
+        pieces: [newPiece, ...state.pieces],
+      }));
     },
   })
 );

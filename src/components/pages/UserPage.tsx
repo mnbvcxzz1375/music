@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Settings, CreditCard, BarChart, Crown } from 'lucide-react';
+import { User, Settings, BarChart, Crown } from 'lucide-react';
 import { Button, Card, CardContent, Input, Tabs, TabItem } from '../UI';
 import { useAuthStore } from '@/services/auth';
 import { useI18n } from '@/i18n';
@@ -79,23 +79,12 @@ export function UserPage({ onSuccess }: UserPageProps) {
           </Card>
 
           <div className="user-actions">
-            <Link to="/user/settings">
+            <Link to="/settings">
               <Card variant="outlined" hoverable>
                 <CardContent>
                   <div className="user-action-item">
                     <span className="user-action-icon"><Settings size={20} /></span>
                     <span className="user-action-label">设置</span>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-
-            <Link to="/subscription">
-              <Card variant="outlined" hoverable>
-                <CardContent>
-                  <div className="user-action-item">
-                    <span className="user-action-icon"><CreditCard size={20} /></span>
-                    <span className="user-action-label">{isPremium() ? '会员中心' : '升级VIP'}</span>
                   </div>
                 </CardContent>
               </Card>

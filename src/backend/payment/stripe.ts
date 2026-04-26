@@ -215,9 +215,9 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription): Pro
   );
 }
 
-export async function cancelStripeSubscription(userId: string): Promise<void> {
+export async function cancelStripeSubscription(userId: string, immediate = false): Promise<void> {
   const subscriptionResult = await queryOne<{ transaction_id: string }>(
-    `SELECT p.transaction_id 
+    `SELECT p.transaction_id, s.stripe_subscription_id
      FROM payments p 
      JOIN subscriptions s ON p.user_id = s.user_id 
      WHERE p.user_id = $1 AND p.status = 'completed' AND p.payment_method = 'stripe'
@@ -232,7 +232,15 @@ export async function cancelStripeSubscription(userId: string): Promise<void> {
   const session = await getStripe().checkout.sessions.retrieve(subscriptionResult.transaction_id);
   
   if (session.subscription) {
-    await getStripe().subscriptions.cancel(session.subscription as string);
+    if (immediate) {
+      // Cancel immediately
+      await getStripe().subscriptions.cancel(session.subscription as string);
+    } else {
+      // Schedule cancellation at period end
+      await getStripe().subscriptions.update(session.subscription as string, {
+        cancel_at_period_end: true,
+      });
+    }
   }
 }
 

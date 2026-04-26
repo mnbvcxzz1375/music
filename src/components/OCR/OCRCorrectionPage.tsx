@@ -1,5 +1,7 @@
 import { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button, Card, CardContent, CardHeader, CardFooter, Input } from '../UI';
+import ScoreRenderer from '../ScoreRenderer/ScoreRenderer';
 import { useOCRStore } from '@/services/ocr';
 import { DetectedElement, OCRError } from '@/services/ocr/types';
 
@@ -9,22 +11,24 @@ export interface OCRCorrectionPageProps {
 }
 
 export function OCRCorrectionPage({ onComplete, onCancel }: OCRCorrectionPageProps) {
-  const { 
-    status, 
-    result, 
-    corrections, 
-    uploadImage, 
-    processImage, 
-    applyCorrection, 
-    applyAllCorrections, 
+  const {
+    status,
+    result,
+    corrections,
+    uploadImage,
+    processImage,
+    applyCorrection,
+    applyAllCorrections,
     reset,
     getConfidenceReport,
-    exportXml,
+    saveToLibrary,
   } = useOCRStore();
-  
+
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [correctionValue, setCorrectionValue] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewTab, setPreviewTab] = useState<'image' | 'score'>('image');
+  const navigate = useNavigate();
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -48,10 +52,11 @@ export function OCRCorrectionPage({ onComplete, onCancel }: OCRCorrectionPagePro
 
   const handleComplete = () => {
     applyAllCorrections();
-    const xml = exportXml();
-    if (xml && onComplete) {
-      onComplete(xml);
-    }
+  };
+
+  const handleSaveToLibrary = async () => {
+    await saveToLibrary();
+    navigate('/library');
   };
 
   const confidenceReport = getConfidenceReport();
@@ -61,6 +66,11 @@ export function OCRCorrectionPage({ onComplete, onCancel }: OCRCorrectionPagePro
       <div className="ocr-page">
         <header className="ocr-header">
           <h1 className="ocr-title">OCR 乐谱导入</h1>
+          {onCancel && (
+            <Button variant="ghost" onClick={onCancel}>
+              取消
+            </Button>
+          )}
         </header>
         
         <main className="ocr-content">
@@ -83,12 +93,6 @@ export function OCRCorrectionPage({ onComplete, onCancel }: OCRCorrectionPagePro
               </div>
             </CardContent>
           </Card>
-          
-          {onCancel && (
-            <Button variant="secondary" onClick={onCancel}>
-              取消
-            </Button>
-          )}
         </main>
       </div>
     );
@@ -130,20 +134,52 @@ export function OCRCorrectionPage({ onComplete, onCancel }: OCRCorrectionPagePro
         </header>
         
         <main className="ocr-content">
-          <div className="ocr-review-grid">
-            <Card variant="outlined">
-              <CardHeader title="原始图片" />
-              <CardContent>
+          {/* Preview Tabs */}
+          <Card variant="outlined">
+            <CardHeader
+              title="预览"
+              action={
+                <div className="ocr-preview-tabs">
+                  <button
+                    className={`ocr-tab-btn ${previewTab === 'image' ? 'active' : ''}`}
+                    onClick={() => setPreviewTab('image')}
+                  >
+                    原始图片
+                  </button>
+                  <button
+                    className={`ocr-tab-btn ${previewTab === 'score' ? 'active' : ''}`}
+                    onClick={() => setPreviewTab('score')}
+                  >
+                    乐谱预览
+                  </button>
+                </div>
+              }
+            />
+            <CardContent>
+              {previewTab === 'image' && (
                 <div className="ocr-image-container">
-                  <img 
-                    src={result.originalImage} 
-                    alt="原始乐谱" 
+                  <img
+                    src={result.originalImage}
+                    alt="原始乐谱"
                     className="ocr-original-image"
                   />
                 </div>
-              </CardContent>
-            </Card>
-            
+              )}
+              {previewTab === 'score' && result.generatedXml && (
+                <div className="ocr-score-preview">
+                  <ScoreRenderer
+                    xml={result.generatedXml}
+                    className="ocr-score-renderer"
+                  />
+                </div>
+              )}
+              {previewTab === 'score' && !result.generatedXml && (
+                <p className="ocr-no-score">暂无乐谱预览数据</p>
+              )}
+            </CardContent>
+          </Card>
+
+          <div className="ocr-review-grid">
             <Card variant="outlined">
               <CardHeader title="识别结果" />
               <CardContent>
@@ -268,11 +304,30 @@ export function OCRCorrectionPage({ onComplete, onCancel }: OCRCorrectionPagePro
                 </p>
               </div>
             </CardContent>
+            {/* Show Score Preview */}
+            {result?.generatedXml && (
+              <div className="ocr-score-preview-container">
+                <Card variant="outlined">
+                  <CardHeader title="识别结果预览" />
+                  <CardContent>
+                    <div className="ocr-score-preview">
+                      <ScoreRenderer
+                        xml={result.generatedXml}
+                        className="ocr-score-renderer"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
             <CardFooter>
               <Button variant="primary" onClick={() => onComplete?.(result?.generatedXml || '')}>
                 开始练习
               </Button>
-              <Button variant="secondary" onClick={reset}>
+              <Button variant="secondary" onClick={handleSaveToLibrary}>
+                保存到曲库
+              </Button>
+              <Button variant="ghost" onClick={reset}>
                 导入新乐谱
               </Button>
             </CardFooter>

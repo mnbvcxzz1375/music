@@ -17,8 +17,6 @@ import type { PracticeSession } from '@/services/statistics/types';
 import { useAchievementStore } from '@/services/achievements';
 import { usePieceStore } from '@/services/piece';
 import { Score } from '@/types/score';
-import { useSubscriptionStore } from '@/services/subscription';
-import { Crown } from 'lucide-react';
 
 export interface PracticePageProps {
   xmlContent?: string;
@@ -39,6 +37,7 @@ export function PracticePage({ xmlContent, onComplete }: PracticePageProps) {
   const [expectedPitch, setExpectedPitch] = useState<number | null>(null);
   const [centsDeviation, setCentsDeviation] = useState<number | null>(null);
   const [confidence, setConfidence] = useState<number>(0);
+  const [fetchedXml, setFetchedXml] = useState<string>('');
 
   const [progressInfo, setProgressInfo] = useState({
     position: 0,
@@ -63,7 +62,6 @@ export function PracticePage({ xmlContent, onComplete }: PracticePageProps) {
   const { addSession, stats } = useStatisticsStore();
   const { checkAchievements } = useAchievementStore();
   const { fetchPieceById, currentPiece } = usePieceStore();
-  const { isPremium } = useSubscriptionStore();
 
   const defaultXml = `<?xml version="1.0" encoding="UTF-8"?>
 <score-partwise version="3.1">
@@ -110,6 +108,7 @@ export function PracticePage({ xmlContent, onComplete }: PracticePageProps) {
             const parser = new MusicXMLParser();
             const parsedScore = parser.parse(xml);
             setScore(parsedScore);
+            setFetchedXml(xml);
             if (parsedScore.parts.length > 0) {
               setSelectedPartId(parsedScore.parts[0].id);
             }
@@ -294,10 +293,6 @@ export function PracticePage({ xmlContent, onComplete }: PracticePageProps) {
           <p className="practice-piece-name">{pieceTitle}</p>
         </div>
         <div className="practice-header-right">
-          <div className={`membership-status ${isPremium() ? 'is-premium' : ''}`}>
-            <Crown size={16} />
-            <span>{isPremium() ? '会员' : '升级VIP'}</span>
-          </div>
           <Button variant="ghost" onClick={() => setShowCalibration(true)}>
             校准
           </Button>
@@ -315,7 +310,7 @@ export function PracticePage({ xmlContent, onComplete }: PracticePageProps) {
             <div className="score-container">
               <ScoreRenderer
                 ref={scoreRef}
-                xml={xmlContent || (currentPiece?.musicXmlUrl ? '' : defaultXml)}
+                xml={xmlContent || fetchedXml || defaultXml}
                 highlightColor="#d4af37"
               />
             </div>

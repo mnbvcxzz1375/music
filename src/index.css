@@ -1929,12 +1929,16 @@ input[type='range']::-webkit-slider-runnable-track {
 .app-header-center {
   display: flex;
   align-items: center;
+  flex: 1 1 auto;
+  justify-content: center;
+  min-width: 0;
 }
 
 .app-header-right {
   display: flex;
   align-items: center;
   gap: var(--spacing-4);
+  margin-left: auto;
 }
 
 /* Membership / VIP UI */
@@ -2416,6 +2420,63 @@ input[type='range']::-webkit-slider-runnable-track {
 .ocr-original-image {
   max-width: 100%;
   border-radius: var(--radius-md);
+}
+
+/* OCR Preview Tabs */
+.ocr-preview-tabs {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.ocr-tab-btn {
+  padding: var(--spacing-2) var(--spacing-3);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.ocr-tab-btn:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+.ocr-tab-btn.active {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent-default);
+  border-color: var(--color-accent-default);
+}
+
+/* OCR Score Preview */
+.ocr-score-preview {
+  min-height: 400px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-4);
+  background: var(--color-bg-default);
+}
+
+.ocr-score-renderer {
+  width: 100%;
+  min-height: 300px;
+}
+
+.ocr-no-score {
+  text-align: center;
+  padding: var(--spacing-8);
+  color: var(--color-text-secondary);
+}
+
+.ocr-score-preview-container {
+  padding: 0 var(--spacing-4);
+}
+
+/* OCR Review Grid single column */
+.ocr-review-grid:has(> :only-child) {
+  grid-template-columns: 1fr;
 }
 
 .ocr-elements-list {
