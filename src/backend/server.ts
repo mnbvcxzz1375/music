@@ -7,6 +7,7 @@ import authRoutes from './routes/auth';
 import pieceRoutes from './routes/pieces';
 import practiceRoutes from './routes/practice';
 import statsRoutes from './routes/stats';
+import subscriptionRoutes from './routes/subscription';
 import { testConnection } from './db/connection';
 import { initRedis, testRedisConnection } from './db/redis';
 import { errorHandler, requestLogger } from './middleware/errorHandler';
@@ -34,6 +35,7 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/pieces', pieceRoutes);
 app.use('/api/v1/practice', practiceRoutes);
 app.use('/api/v1/stats', statsRoutes);
+app.use('/api/v1/subscriptions', subscriptionRoutes);
 
 // Health Check Route
 app.get('/api/health', async (_req: Request, res: Response) => {
@@ -59,7 +61,7 @@ app.get('/api/health', async (_req: Request, res: Response) => {
 
 // Root Route
 app.get('/', (_req: Request, res: Response) => {
-  res.send('Music Practice App Backend - Phase 9.5');
+  res.send('Music Practice App Backend - Phase 9.6');
 });
 
 // Error Handler
@@ -87,6 +89,7 @@ const startServer = async () => {
       console.log(`Piece routes mounted at /api/v1/pieces`);
       console.log(`Practice routes mounted at /api/v1/practice`);
       console.log(`Stats & Achievements mounted at /api/v1/stats`);
+      console.log(`Subscription routes mounted at /api/v1/subscriptions`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
