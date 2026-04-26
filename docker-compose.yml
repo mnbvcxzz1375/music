@@ -1,48 +1,33 @@
-version: '3.8'
-
 services:
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
+  postgres:
+    image: postgres:15-alpine
     ports:
-      - "80:80"
+      - "5432:5432"
     environment:
-      - NODE_ENV=production
-    depends_on:
-      - backend
-    networks:
-      - app-network
-
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
-    ports:
-      - "3001:3001"
-    environment:
-      - NODE_ENV=production
-      - PORT=3001
-      - DATABASE_URL=${DATABASE_URL}
-      - JWT_SECRET=${JWT_SECRET}
-    networks:
-      - app-network
+      POSTGRES_USER: music_master
+      POSTGRES_PASSWORD: secret123
+      POSTGRES_DB: musicdb
     volumes:
-      - backend-data:/app/data
+      - postgres-data:/var/lib/postgresql/data
+      - ./src/backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U music_master"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis:
-    image: redis:alpine
+    image: redis:7-alpine
     ports:
       - "6379:6379"
-    networks:
-      - app-network
     volumes:
       - redis-data:/data
-
-networks:
-  app-network:
-    driver: bridge
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
-  backend-data:
+  postgres-data:
   redis-data:

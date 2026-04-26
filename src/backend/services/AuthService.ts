@@ -1,11 +1,14 @@
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
-import { User } from '../models/User';
+import { v4 as uuidv4 } from 'uuid';
+import { User } from '../db/models';
+import * as usersRepo from '../db/users';
+import * as redis from '../db/redis';
+import { generateAccessToken, generateRefreshToken, generateTokenPair, verifyAccessToken } from '../auth/jwt';
 
 interface RegisterInput {
   email: string;
+  username: string;
   password: string;
-  nickname?: string;
 }
 
 interface LoginResult {
@@ -19,193 +22,118 @@ interface RefreshResult {
   refreshToken: string;
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || 'default-secret';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '15m';
-const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || '7d';
+const ACCESS_TOKEN_SECRET = process.env.JWT_SECRET || 'dev-secret-key';
+const ACCESS_TOKEN_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '15m';
+const REFRESH_TOKEN_EXPIRES_IN = 7 * 24 * 60 * 60; // 7 days in seconds
 
-export class AuthService {
-  private refreshTokens: Map<string, { userId: string; expiresAt: Date; isRevoked: boolean }> = new Map();
-
+export class Auth {
+  /**
+   * Registers a new user.
+   * 1. Checks if email/username exists.
+   * 2. Creates user in PostgreSQL.
+   * 3. Generates JWT pair.
+   * 4. Stores refresh token in Redis.
+   */
   async register(input: RegisterInput): Promise<LoginResult> {
-    const existingUser = await this.findUserByEmail(input.email);
-    
-    if (existingUser) {
-      throw new Error('User already exists with this email');
-    }
-    
-    const hashedPassword = await bcrypt.hash(input.password, 12);
-    
-    const user: User = {
-      id: this.generateId(),
-      email: input.email,
-      passwordHash: hashedPassword,
-      nickname: input.nickname || input.email.split('@')[0],
-      subscriptionStatus: 'free',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    
-    await this.saveUser(user);
-    
-    const tokens = this.generateTokens(user);
-    
-    return {
-      user: this.sanitizeUser(user),
-      ...tokens,
-    };
+    const existingEmail = await usersRepo.getUserByEmail(input.email);
+    if (existingEmail) throw new Error('Email already registered');
+
+    const existingUsername = await usersRepo.getUserByUsername(input.username);
+    if (existingUsername) throw new Error('Username already taken');
+
+    const user = await usersRepo.createUser(input.email, input.username, input.password);
+    const sanitizedUser = this.sanitize(user);
+    const tokens = this.createTokens(sanitizedUser);
+
+    await redis.set(`refresh_token:${tokens.refreshToken}`, user.id);
+    await redis.expire(`refresh_token:${tokens.refreshToken}`, REFRESH_TOKEN_EXPIRES_IN);
+
+    return { user: sanitizedUser, ...tokens };
   }
 
-  async login(input: { email: string; password: string }): Promise<LoginResult> {
-    const user = await this.findUserByEmail(input.email);
-    
-    if (!user) {
-      throw new Error('Invalid email or password');
-    }
-    
-    const isValid = await bcrypt.compare(input.password, user.passwordHash);
-    
-    if (!isValid) {
-      throw new Error('Invalid email or password');
-    }
-    
-    user.lastLoginAt = new Date();
-    await this.saveUser(user);
-    
-    const tokens = this.generateTokens(user);
-    
-    return {
-      user: this.sanitizeUser(user),
-      ...tokens,
-    };
+  /**
+   * Logs in an existing user.
+   * 1. Finds user by email.
+   * 2. Verifies password hash.
+   * 3. Updates last_active_at.
+   * 4. Generates tokens and stores refresh token in Redis.
+   */
+  async login(email: string, password: string): Promise<LoginResult> {
+    const user = await usersRepo.getUserByEmail(email);
+    if (!user) throw new Error('Invalid email or password');
+
+    const isValid = await usersRepo.verifyPassword(user, password);
+    if (!isValid) throw new Error('Invalid email or password');
+
+    // Update last active time
+    await usersRepo.updateUser(user.id, { lastActiveAt: new Date() });
+
+    const sanitizedUser = this.sanitize(user);
+    const tokens = this.createTokens(sanitizedUser);
+
+    // Store refresh token in Redis with 7-day expiry
+    await redis.set(`refresh_token:${tokens.refreshToken}`, user.id);
+    await redis.expire(`refresh_token:${tokens.refreshToken}`, REFRESH_TOKEN_EXPIRES_IN);
+
+    return { user: sanitizedUser, ...tokens };
   }
 
-  async refreshToken(refreshToken: string): Promise<RefreshResult> {
-    const storedToken = this.refreshTokens.get(refreshToken);
-    
-    if (!storedToken || storedToken.isRevoked || storedToken.expiresAt < new Date()) {
-      throw new Error('Invalid or expired refresh token');
-    }
-    
-    const user = await this.findUserById(storedToken.userId);
-    
-    if (!user) {
-      throw new Error('User not found');
-    }
-    
-    this.refreshTokens.delete(refreshToken);
-    
-    const tokens = this.generateTokens(user);
-    
+  /**
+   * Refreshes access and refresh tokens using a valid refresh token.
+   * Implements token rotation (old refresh token is deleted).
+   */
+  async refreshTokens(refreshToken: string): Promise<RefreshResult> {
+    const userId = await redis.get(`refresh_token:${refreshToken}`);
+    if (!userId) throw new Error('Invalid or expired refresh token');
+
+    // Token rotation: delete the old one immediately
+    await redis.del(`refresh_token:${refreshToken}`);
+
+    const user = await usersRepo.getUserById(userId);
+    if (!user) throw new Error('User not found');
+
+    const sanitizedUser = this.sanitize(user);
+    const tokens = this.createTokens(sanitizedUser);
+
+    // Save new refresh token
+    await redis.set(`refresh_token:${tokens.refreshToken}`, userId);
+    await redis.expire(`refresh_token:${tokens.refreshToken}`, REFRESH_TOKEN_EXPIRES_IN);
+
     return tokens;
   }
 
-  async logout(userId: string, refreshToken?: string): Promise<void> {
-    if (refreshToken) {
-      this.refreshTokens.delete(refreshToken);
-    } else {
-      for (const [token, data] of this.refreshTokens.entries()) {
-        if (data.userId === userId) {
-          this.refreshTokens.delete(token);
-        }
-      }
-    }
+  /**
+   * Logs out the user by revoking the specified refresh token from Redis.
+   */
+  async logout(refreshToken: string): Promise<void> {
+    const userId = await redis.get(`refresh_token:${refreshToken}`);
+    if (!userId) throw new Error('Invalid refresh token');
+
+    await redis.del(`refresh_token:${refreshToken}`);
   }
 
-  async oauthGoogle(token: string): Promise<LoginResult> {
-    const googleUser = await this.verifyGoogleToken(token);
-    
-    let user = await this.findUserByEmail(googleUser.email);
-    
-    if (!user) {
-      user = {
-        id: this.generateId(),
-        email: googleUser.email,
-        passwordHash: '',
-        nickname: googleUser.name,
-        avatarUrl: googleUser.picture,
-        subscriptionStatus: 'free',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      
-      await this.saveUser(user);
-    }
-    
-    user.lastLoginAt = new Date();
-    await this.saveUser(user);
-    
-    const tokens = this.generateTokens(user);
-    
-    return {
-      user: this.sanitizeUser(user),
-      ...tokens,
-    };
+  /**
+   * Gets the current authenticated user's profile.
+   */
+  async getProfile(userId: string): Promise<User | null> {
+    const user = await usersRepo.getUserById(userId);
+    return user ? this.sanitize(user) : null;
   }
 
-  async getUserById(userId: string): Promise<User | null> {
-    return this.findUserById(userId);
+  /**
+   * Sanitizes a user object to prevent sensitive data leaks.
+   */
+  private sanitize(user: User): User {
+    const { passwordHash, ...rest } = user;
+    return rest;
   }
 
-  private generateTokens(user: User): { accessToken: string; refreshToken: string } {
-    const payload = {
-      userId: user.id,
-      email: user.email,
-      subscriptionStatus: user.subscriptionStatus,
-      permissions: this.getPermissions(user.subscriptionStatus),
-    };
-    
-    const accessToken = jwt.sign(payload, JWT_SECRET, {
-      expiresIn: JWT_EXPIRES_IN,
-    });
-    
-    const refreshToken = this.generateRefreshToken();
-    this.refreshTokens.set(refreshToken, {
-      userId: user.id,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      isRevoked: false,
-    });
-    
-    return { accessToken, refreshToken };
-  }
-
-  private generateRefreshToken(): string {
-    return Math.random().toString(36).substring(2) + Date.now().toString(36);
-  }
-
-  private getPermissions(subscriptionStatus: string): string[] {
-    if (subscriptionStatus === 'premium') {
-      return ['premium', 'advanced_analysis', 'unlimited_ocr', 'premium_pieces'];
-    }
-    return ['basic_practice', 'basic_statistics'];
-  }
-
-  private sanitizeUser(user: User): User {
-    return {
-      ...user,
-      passwordHash: undefined,
-    } as User;
-  }
-
-  private generateId(): string {
-    return Math.random().toString(36).substring(2) + Date.now().toString(36);
-  }
-
-  private async findUserByEmail(email: string): Promise<User | null> {
-    return null;
-  }
-
-  private async findUserById(id: string): Promise<User | null> {
-    return null;
-  }
-
-  private async saveUser(user: User): Promise<void> {
-  }
-
-  private async verifyGoogleToken(token: string): Promise<{ email: string; name: string; picture: string }> {
-    return {
-      email: 'test@example.com',
-      name: 'Test User',
-      picture: '',
-    };
+  /**
+   * Generates access and refresh tokens.
+   */
+  private createTokens(user: User): { accessToken: string; refreshToken: string } {
+    return generateTokenPair(user);
   }
 }
+
+export const authService = new Auth();

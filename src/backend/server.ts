@@ -3,8 +3,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 
-import { checkConnection } from './db/connection';
-import { checkRedis } from './db/redis';
+import authRoutes from './routes/auth';
+import { testConnection } from './db/connection';
+import { initRedis, testRedisConnection } from './db/redis';
+import { errorHandler, requestLogger } from './middleware/errorHandler';
 
 const app: Application = express();
 const port = process.env.PORT || 3001;
@@ -13,22 +15,26 @@ const port = process.env.PORT || 3001;
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
+app.use(requestLogger);
 
 // Rate Limiter
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  max: 100, // Limit each IP to 100 requests per `window`
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 app.use(limiter);
+
+// Routes
+app.use('/api/v1/auth', authRoutes);
 
 // Health Check Route
 app.get('/api/health', async (_req: Request, res: Response) => {
   try {
     const [dbOk, redisOk] = await Promise.all([
-      checkConnection(),
-      checkRedis(),
+      testConnection(),
+      testRedisConnection(),
     ]);
 
     const status = dbOk && redisOk ? 200 : 503;
@@ -47,12 +53,28 @@ app.get('/api/health', async (_req: Request, res: Response) => {
 
 // Root Route
 app.get('/', (_req: Request, res: Response) => {
-  res.send('Music Practice App Backend API - Phase 9.1 Ready');
+  res.send('Music Practice App Backend - Phase 9.2 Ready');
 });
+
+// Error Handler
+app.use(errorHandler);
 
 // Start Server
 const startServer = async () => {
   try {
+    // Initialize Redis connection
+    await initRedis();
+    
+    // Test DB and Redis connections on startup
+    const dbOk = await testConnection();
+    const redisOk = await testRedisConnection();
+    
+    if (!dbOk || !redisOk) {
+      console.error('Warning: Database or Redis connection failed on startup');
+    } else {
+      console.log('Database and Redis connections established');
+    }
+
     app.listen(port, () => {
       console.log(`Backend server running at http://localhost:${port}`);
       console.log(`Health check available at http://localhost:${port}/api/health`);

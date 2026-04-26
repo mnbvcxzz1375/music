@@ -1,144 +1,101 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/AuthService';
+import { verifyAccessToken } from '../auth/jwt';
 import { authMiddleware } from '../middleware/authMiddleware';
 
 const router = Router();
 const authService = new AuthService();
 
-router.post('/register', async (req: Request, res: Response) => {
-  try {
-    const { email, password, nickname } = req.body;
-    
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        error: { code: 4001, message: 'Email and password are required' },
-      });
-    }
+// Helper for async route handling
+const asyncHandler = (fn: Function) => (req: Request, res: Response, next: NextFunction) =>
+  Promise.resolve(fn(req, res, next)).catch(next);
 
-    const result = await authService.register({ email, password, nickname });
-    
-    res.status(201).json({
-      success: true,
-      data: result,
-    });
-  } catch (error) {
-    res.status(400).json({
+// Register
+router.post('/register', asyncHandler(async (req: Request, res: Response) => {
+  const { email, password, username, avatarUrl } = req.body;
+  
+  if (!email || !password || !username) {
+    return res.status(400).json({
       success: false,
-      error: { code: 5001, message: error instanceof Error ? error.message : 'Registration failed' },
+      message: 'Email, password, and username are required',
     });
   }
-});
 
-router.post('/login', async (req: Request, res: Response) => {
-  try {
-    const { email, password } = req.body;
-    
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        error: { code: 4001, message: 'Email and password are required' },
-      });
-    }
+  const result = await authService.register({ email, password, username, avatarUrl });
+  
+  res.status(201).json({
+    success: true,
+    message: 'User registered successfully',
+    data: result,
+  });
+}));
 
-    const result = await authService.login({ email, password });
-    
-    res.json({
-      success: true,
-      data: result,
-    });
-  } catch (error) {
-    res.status(401).json({
+// Login
+router.post('/login', asyncHandler(async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+  
+  if (!email || !password) {
+    return res.status(400).json({
       success: false,
-      error: { code: 4001, message: error instanceof Error ? error.message : 'Login failed' },
+      message: 'Email and password are required',
     });
   }
-});
 
-router.post('/refresh', async (req: Request, res: Response) => {
-  try {
-    const { refreshToken } = req.body;
-    
-    if (!refreshToken) {
-      return res.status(400).json({
-        success: false,
-        error: { code: 4003, message: 'Refresh token is required' },
-      });
-    }
+  const result = await authService.login(email, password);
+  
+  res.json({
+    success: true,
+    message: 'Logged in successfully',
+    data: result,
+  });
+}));
 
-    const result = await authService.refreshToken(refreshToken);
-    
-    res.json({
-      success: true,
-      data: result,
-    });
-  } catch (error) {
-    res.status(401).json({
+// Refresh Token
+router.post('/refresh', asyncHandler(async (req: Request, res: Response) => {
+  const { refreshToken } = req.body;
+  
+  if (!refreshToken) {
+    return res.status(400).json({
       success: false,
-      error: { code: 4004, message: 'Invalid or expired refresh token' },
+      message: 'Refresh token is required',
     });
   }
-});
 
-router.post('/logout', authMiddleware, async (req: Request, res: Response) => {
-  try {
-    const userId = req.user?.userId;
-    const { refreshToken } = req.body;
-    
-    await authService.logout(userId, refreshToken);
-    
-    res.json({
-      success: true,
-      data: { message: 'Logged out successfully' },
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: { code: 6001, message: 'Logout failed' },
-    });
-  }
-});
+  const result = await authService.refreshToken(refreshToken);
+  
+  res.json({
+    success: true,
+    data: result,
+  });
+}));
 
-router.post('/oauth/google', async (req: Request, res: Response) => {
-  try {
-    const { token } = req.body;
-    
-    if (!token) {
-      return res.status(400).json({
-        success: false,
-        error: { code: 4005, message: 'Google token is required' },
-      });
-    }
+// Get Current User Profile
+router.get('/me', authMiddleware, asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.user?.userId;
+  if (!userId) return res.status(401).json({ success: false, message: 'Not authenticated' });
 
-    const result = await authService.oauthGoogle(token);
-    
-    res.json({
-      success: true,
-      data: result,
-    });
-  } catch (error) {
-    res.status(401).json({
-      success: false,
-      error: { code: 4005, message: 'Google authentication failed' },
-    });
-  }
-});
+  const user = await authService.getUserById(userId);
+  
+  res.json({
+    success: true,
+    data: user,
+  });
+}));
 
-router.get('/me', authMiddleware, async (req: Request, res: Response) => {
-  try {
-    const userId = req.user?.userId;
-    const user = await authService.getUserById(userId);
-    
-    res.json({
-      success: true,
-      data: user,
-    });
-  } catch (error) {
-    res.status(404).json({
-      success: false,
-      error: { code: 5001, message: 'User not found' },
-    });
-  }
-});
+// Logout
+router.post('/logout', authMiddleware, asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.user?.userId;
+  const { refreshToken } = req.body;
+  
+  if (!userId) return res.status(401).json({ success: false, message: 'Not authenticated' });
+  if (!refreshToken) return res.status(400).json({ success: false, message: 'Refresh token is required' });
+  
+  await authService.logout(userId, refreshToken);
+  
+  res.json({
+    success: true,
+    message: 'Logged out successfully',
+  });
+}));
 
 export default router;
