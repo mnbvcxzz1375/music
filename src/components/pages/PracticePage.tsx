@@ -16,6 +16,7 @@ import { useStatisticsStore } from '@/services/statistics';
 import type { PracticeSession } from '@/services/statistics/types';
 import { useAchievementStore } from '@/services/achievements';
 import { usePieceStore } from '@/services/piece';
+import { useSubscriptionStore } from '@/services/subscription';
 import { Score } from '@/types/score';
 
 export interface PracticePageProps {
@@ -62,6 +63,7 @@ export function PracticePage({ xmlContent, onComplete }: PracticePageProps) {
   const { addSession, stats } = useStatisticsStore();
   const { checkAchievements } = useAchievementStore();
   const { fetchPieceById, currentPiece } = usePieceStore();
+  const { isPremium } = useSubscriptionStore();
 
   const defaultXml = `<?xml version="1.0" encoding="UTF-8"?>
 <score-partwise version="3.1">
@@ -196,6 +198,13 @@ export function PracticePage({ xmlContent, onComplete }: PracticePageProps) {
   }, [practiceStartTime, pieceId, pieceTitle, progressInfo, tempo, addSession, stats, checkAchievements]);
 
   const handleStartPractice = async () => {
+    // VIP check: prevent practice for premium pieces without subscription
+    if (currentPiece?.isPremium && !isPremium()) {
+      alert('此曲目为 VIP 专属内容，请先升级为 VIP 会员');
+      navigate('/subscription');
+      return;
+    }
+
     if (!audioCaptureRef.current) {
       audioCaptureRef.current = new AudioCapture();
     }

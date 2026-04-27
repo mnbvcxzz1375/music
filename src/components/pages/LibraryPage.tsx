@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Music, Clock, Play, Star, Crown } from 'lucide-react';
 import { Button, Card, CardContent, CardHeader, Input, Tabs, TabItem } from '../UI';
 import { usePieceStore } from '@/services/piece';
+import { useOCRStore } from '@/services/ocr';
 import type { Piece, PieceFilter, InstrumentType, MusicGenre } from '@/services/piece/types';
 
 export interface LibraryPageProps {
@@ -61,7 +62,6 @@ export function LibraryPage({ onSelectPiece }: LibraryPageProps) {
     fetchPieces,
     uploadPiece,
     toggleFavorite,
-    startOCRSession,
   } = usePieceStore();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -136,7 +136,11 @@ export function LibraryPage({ onSelectPiece }: LibraryPageProps) {
     if (!file) return;
 
     try {
-      await startOCRSession(file);
+      // Upload directly to OCRStore and process immediately
+      const { uploadImage, processImage, reset } = useOCRStore.getState();
+      await reset();
+      await uploadImage(file);
+      await processImage();
       navigate('/ocr');
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : 'OCR启动失败');

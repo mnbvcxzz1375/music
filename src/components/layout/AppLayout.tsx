@@ -1,138 +1,167 @@
-import { ReactNode } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Home, Music, BookOpen, BarChart, User, ArrowLeft, Crown } from 'lucide-react';
+import { ReactNode, useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Home, Music, BookOpen, BarChart, User, Crown, LogOut, Menu, X } from 'lucide-react';
 import { ThemeToggle } from '../Theme';
-import { Navigation, NavItem } from '../UI';
 import { useI18n } from '@/i18n';
+import { useAuthStore } from '@/services/auth';
+import { useSubscriptionStore } from '@/services/subscription';
 
 export interface AppLayoutProps {
   children: ReactNode;
-  showNavigation?: boolean;
-  showFooter?: boolean;
 }
 
-export function AppLayout({ 
-  children, 
-  showNavigation = true,
-  showFooter = true,
-}: AppLayoutProps) {
+export function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
   const { t } = useI18n();
+  const navigate = useNavigate();
   
-  const navItems: NavItem[] = [
-    { id: 'home', label: t.nav.home, href: '/', icon: <Home size={18} /> },
-    { id: 'practice', label: t.nav.practice, href: '/practice', icon: <Music size={18} /> },
-    { id: 'library', label: t.nav.library, href: '/library', icon: <BookOpen size={18} /> },
-    { id: 'statistics', label: t.nav.statistics, href: '/statistics', icon: <BarChart size={18} /> },
+  // Auth & Subscription state
+  const { isAuthenticated, logout } = useAuthStore();
+  const { isPremium } = useSubscriptionStore();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Close mobile menu on resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) setIsMobileMenuOpen(false);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Check if we are on login/register page to hide sidebar
+  const isAuthPage = location.pathname === '/user' || !isAuthenticated;
+
+  if (isAuthPage) {
+    return (
+      <div className="app-layout auth-layout">
+        <main className="app-main">
+          {children}
+        </main>
+      </div>
+    );
+  }
+
+  // Navigation Items
+  const navItems = [
+    { id: 'home', label: t.nav.home, href: '/', icon: <Home size={22} /> },
+    { id: 'library', label: t.nav.library, href: '/library', icon: <BookOpen size={22} /> },
+    { id: 'practice', label: t.nav.practice, href: '/practice', icon: <Music size={22} /> },
+    { id: 'statistics', label: t.nav.statistics, href: '/statistics', icon: <BarChart size={22} /> },
   ];
-  
-  const getActiveId = () => {
-    const path = location.pathname;
-    if (path === '/') return 'home';
-    if (path.startsWith('/practice')) return 'practice';
-    if (path.startsWith('/library')) return 'library';
-    if (path.startsWith('/statistics')) return 'statistics';
-    return '';
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
   };
 
-  return (
-    <div className="app-layout">
-      <header className="app-header">
-        <div className="app-header-left">
-          <Link to="/" className="app-brand">
-            <h1 className="app-brand-title">Resonance</h1>
-            <p className="app-brand-subtitle">Precision Practice</p>
-          </Link>
-        </div>
-        
-        {showNavigation && (
-          <div className="app-header-center">
-            <Navigation
-              items={navItems}
-              activeId={getActiveId()}
-              orientation="horizontal"
-              variant="default"
-            />
-          </div>
-        )}
-        
-        <div className="app-header-right">
-          {/* 会员入口 */}
+  const isActive = (path: string) => {
+    if (path === '/' && location.pathname === '/') return true;
+    if (location.pathname.startsWith(path)) return true;
+    return false;
+  };
+
+  const SidebarContent = () => (
+    <div className="sidebar-inner">
+      {/* Sidebar Header / Logo */}
+      <div className="sidebar-header">
+        <Link to="/" className="sidebar-brand">
+          <span className="brand-icon">🎵</span>
+          <span className="brand-text">Resonance</span>
+        </Link>
+      </div>
+
+      {/* Navigation Links */}
+      <nav className="sidebar-nav">
+        {navItems.map((item) => (
           <Link 
-            to="/subscription" 
-            className="membership-link"
+            key={item.id} 
+            to={item.href}
+            className={`nav-item ${isActive(item.href) ? 'active' : ''}`}
           >
-            <Crown size={18} />
-            <span>升级VIP</span>
+            <span className="nav-icon">{item.icon}</span>
+            <span className="nav-label">{item.label}</span>
           </Link>
-          <ThemeToggle />
-          <Link to="/user" className="app-user-link">
-            <span className="app-user-icon"><User size={20} /></span>
+        ))}
+      </nav>
+
+      {/* Sidebar Footer */}
+      <div className="sidebar-footer">
+        {!isPremium() && (
+          <Link to="/subscription" className="nav-item premium-upgrade">
+            <span className="nav-icon"><Crown size={22} /></span>
+            <span className="nav-label">升级 VIP</span>
           </Link>
-        </div>
-      </header>
+        )}
+        <Link to="/user" className={`nav-item ${isActive('/user') ? 'active' : ''}`}>
+          <span className="nav-icon"><User size={22} /></span>
+          <span className="nav-label">个人中心</span>
+        </Link>
+        <button className="nav-item logout-btn" onClick={handleLogout}>
+          <span className="nav-icon"><LogOut size={22} /></span>
+          <span className="nav-label">登出</span>
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="app-layout spotify-layout">
+      {/* Mobile Header */}
+      <div className="mobile-header">
+        <button className="menu-toggle" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+        <Link to="/" className="mobile-brand">Resonance</Link>
+        <ThemeToggle />
+      </div>
+
+      {/* Sidebar (Desktop + Mobile Drawer) */}
+      <aside className={`sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
+        <SidebarContent />
+      </aside>
       
-      <main className="app-main">
-        {children}
-      </main>
-      
-      {showFooter && (
-        <footer className="app-footer">
-          <div className="app-footer-content">
-            <p className="app-footer-copyright">
-              © 2026 Resonance. All rights reserved.
-            </p>
-            <div className="app-footer-links">
-              <Link to="/help">帮助</Link>
-              <Link to="/help/about">关于</Link>
-            </div>
+      {/* Main Content Area */}
+      <div className="main-wrapper">
+        {/* Sticky Header inside content */}
+        <header className="content-header">
+          <div className="header-actions">
+            <ThemeToggle />
+            <Link to="/user" className="header-user-profile">
+              <span className="user-avatar"><User size={18} /></span>
+            </Link>
           </div>
-        </footer>
-      )}
+        </header>
+
+        <main className="app-main" onClick={() => isMobileMenuOpen && setIsMobileMenuOpen(false)}>
+          <div className="content-inner">
+            {children}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
 
+// PageLayout for inner pages with a title
 export interface PageLayoutProps {
   title: string;
   subtitle?: string;
   children: ReactNode;
-  actions?: ReactNode;
-  backLink?: string;
 }
 
-export function PageLayout({
-  title,
-  subtitle,
-  children,
-  actions,
-  backLink,
-}: PageLayoutProps) {
+export function PageLayout({ title, subtitle, children }: PageLayoutProps) {
   return (
-    <AppLayout>
-      <div className="page-layout">
-        <header className="page-header">
-          <div className="page-header-left">
-            {backLink && (
-              <Link to={backLink} className="page-back-link">
-                <ArrowLeft size={16} className="inline-icon" /> 返回
-              </Link>
-            )}
-            <div className="page-title-group">
-              <h1 className="page-title">{title}</h1>
-              {subtitle && <p className="page-subtitle">{subtitle}</p>}
-            </div>
-          </div>
-          {actions && (
-            <div className="page-header-right">
-              {actions}
-            </div>
-          )}
-        </header>
-        <div className="page-content">
-          {children}
+    <div className="page-layout">
+      <header className="page-header">
+        <div className="page-title-group">
+          <h1 className="page-title">{title}</h1>
+          {subtitle && <p className="page-subtitle">{subtitle}</p>}
         </div>
+      </header>
+      <div className="page-content">
+        {children}
       </div>
-    </AppLayout>
+    </div>
   );
 }

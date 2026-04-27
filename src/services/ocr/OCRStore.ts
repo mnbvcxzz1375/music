@@ -83,39 +83,140 @@ export const useOCRStore = create<OCRState>()(
       
       await new Promise(resolve => setTimeout(resolve, 2000));
       
+      // Extract file name from original image for context
+      const fileName = currentResult.originalImage.split('/').pop()?.split('.')[0] || 'Unknown';
+      
       const mockElements: DetectedElement[] = [
-        { id: 'e1', type: 'clef', position: { x: 50, y: 100, width: 30, height: 40 }, value: 'G', confidence: 0.95 },
+        { id: 'e1', type: 'clef', position: { x: 50, y: 100, width: 30, height: 40 }, value: 'Treble Clef', confidence: 0.95 },
         { id: 'e2', type: 'keySignature', position: { x: 100, y: 100, width: 60, height: 40 }, value: 'C major', confidence: 0.88 },
         { id: 'e3', type: 'timeSignature', position: { x: 180, y: 100, width: 40, height: 40 }, value: '4/4', confidence: 0.92 },
         { id: 'e4', type: 'note', position: { x: 250, y: 120, width: 20, height: 30 }, value: 'C4', confidence: 0.78 },
-        { id: 'e5', type: 'note', position: { x: 300, y: 110, width: 20, height: 30 }, value: 'D4', confidence: 0.65 },
-        { id: 'e6', type: 'note', position: { x: 350, y: 100, width: 20, height: 30 }, value: 'E4?', confidence: 0.45 },
+        { id: 'e5', type: 'note', position: { x: 300, y: 110, width: 20, height: 30 }, value: 'E4', confidence: 0.65 },
+        { id: 'e6', type: 'note', position: { x: 350, y: 100, width: 20, height: 30 }, value: 'G4', confidence: 0.45 },
       ];
       
       const mockErrors: OCRError[] = [
-        { elementId: 'e5', type: 'low_confidence', message: '音符识别置信度较低', suggestion: '请确认是否为D4' },
-        { elementId: 'e6', type: 'ambiguous', message: '音符识别不明确', suggestion: '可能是E4或F4' },
+        { elementId: 'e5', type: 'low_confidence', message: '音符识别置信度较低', suggestion: '请确认是否为E4' },
+        { elementId: 'e6', type: 'ambiguous', message: '音符识别不明确', suggestion: '可能是G4或A4' },
       ];
       
+      // Generate MusicXML that matches the detected elements
       const mockXml = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="3.1">
+  <work>
+    <work-title>${fileName}</work-title>
+  </work>
+  <identification>
+    <creator type="composer">OCR Import</creator>
+    <encoding>
+      <software>Resonance OCR</software>
+    </encoding>
+  </identification>
   <part-list>
     <score-part id="P1">
       <part-name>Piano</part-name>
+      <part-abbreviation>Pno.</part-abbreviation>
     </score-part>
   </part-list>
   <part id="P1">
     <measure number="1">
       <attributes>
         <divisions>1</divisions>
-        <key><fifths>0</fifths></key>
-        <time><beats>4</beats><beat-type>4</beat-type></time>
-        <clef><sign>G</sign><line>2</line></clef>
+        <key>
+          <fifths>0</fifths>
+        </key>
+        <time>
+          <beats>4</beats>
+          <beat-type>4</beat-type>
+        </time>
+        <clef>
+          <sign>G</sign>
+          <line>2</line>
+        </clef>
       </attributes>
-      <note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
-      <note><pitch><step>D</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
-      <note><pitch><step>E</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
-      <note><pitch><step>F</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>
+      <note>
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <type>quarter</type>
+      </note>
+      <note>
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <type>quarter</type>
+      </note>
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <type>quarter</type>
+      </note>
+      <note>
+        <pitch>
+          <step>C</step>
+          <octave>5</octave>
+        </pitch>
+        <duration>1</duration>
+        <type>quarter</type>
+      </note>
+    </measure>
+    <measure number="2">
+      <note>
+        <pitch>
+          <step>C</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <type>quarter</type>
+      </note>
+      <note>
+        <pitch>
+          <step>D</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <type>quarter</type>
+      </note>
+      <note>
+        <pitch>
+          <step>E</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <type>quarter</type>
+      </note>
+      <note>
+        <pitch>
+          <step>F</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>1</duration>
+        <type>quarter</type>
+      </note>
+    </measure>
+    <measure number="3">
+      <note>
+        <pitch>
+          <step>G</step>
+          <octave>4</octave>
+        </pitch>
+        <duration>2</duration>
+        <type>half</type>
+      </note>
+      <note>
+        <rest>
+          <duration>2</duration>
+        </rest>
+        <type>half</type>
+      </note>
     </measure>
   </part>
 </score-partwise>`;
@@ -192,6 +293,10 @@ export const useOCRStore = create<OCRState>()(
       const xml = get().exportXml();
       if (!result || !xml) return;
 
+      // Create a blob URL for the musicXml so PracticePage can fetch it
+      const blob = new Blob([xml], { type: 'application/xml' });
+      const blobUrl = URL.createObjectURL(blob);
+
       // Create a local Piece from OCR result and add to piece store
       const newPiece: Piece = {
         id: `ocr-${Date.now()}`,
@@ -201,7 +306,7 @@ export const useOCRStore = create<OCRState>()(
         instrumentTypes: ['piano'],
         genres: ['classical'],
         durationSeconds: 120,
-        musicXmlUrl: `data:application/xml;charset=utf-8,${encodeURIComponent(xml)}`,
+        musicXmlUrl: blobUrl,
         tags: ['ocr'],
         isPremium: false,
         isOfficial: false,

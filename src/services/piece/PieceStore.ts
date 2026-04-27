@@ -78,15 +78,22 @@ export const usePieceStore = create<PieceStore>((set, get) => ({
       }
       
       const data = await response.json();
+
+      // Merge API pieces with locally-saved pieces (OCR imports), deduping by ID
+      const localPieces = get().pieces.filter(p => p.id.startsWith('ocr-'));
+      const apiPieces = data.pieces || [];
+      const merged = [...localPieces, ...apiPieces.filter((p: Piece) => !p.id.startsWith('ocr-'))];
+
       set({
-        pieces: data.pieces || [],
-        total: data.total || 0,
+        pieces: merged,
+        total: merged.length,
         page: data.page || 1,
         limit: data.limit || 20,
         loading: false,
       });
     } catch {
-      set({ pieces: [], total: 0, page: 1, limit: 20, loading: false });
+      // Keep existing pieces on failure — don't wipe locally-saved items
+      set({ loading: false });
     }
   },
 
