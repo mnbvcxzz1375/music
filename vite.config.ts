@@ -13,7 +13,8 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      port: 5174,
+      port: 5173,
+      host: '127.0.0.1',
       strictPort: true,
       watch: {
         ignored: ['**/src-tauri/**'],
