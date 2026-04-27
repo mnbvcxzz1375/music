@@ -29,8 +29,8 @@ export function AppLayout({ children }: AppLayoutProps) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Check if we are on login/register page to hide sidebar
-  const isAuthPage = location.pathname === '/user' || !isAuthenticated;
+  // Check if we are on login/register page
+  const isAuthPage = location.pathname === '/user' || location.pathname.startsWith('/user?');
 
   if (isAuthPage) {
     return (
@@ -87,20 +87,27 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* Sidebar Footer */}
       <div className="spotify-sidebar-footer">
-        {!isPremium() && (
-          <Link to="/subscription" className="spotify-nav-item premium-upgrade" style={{ color: '#f59e0b' }}>
-            <span className="nav-icon"><Crown size={22} /></span>
-            <span className="nav-label">升级 VIP</span>
+        {!isAuthenticated ? (
+          <Link to="/user" className="spotify-nav-item" style={{ color: '#1ed760', fontWeight: 'bold' }}>
+            <span className="nav-icon"><User size={22} /></span>
+            <span className="nav-label">登录 / 注册</span>
           </Link>
+        ) : (
+          <>
+            <Link to="/subscription" className={`spotify-nav-item ${isActive('/subscription') ? 'active' : ''}`}>
+              <span className="nav-icon"><Crown size={22} /></span>
+              <span className="nav-label">{isPremium() ? '会员中心' : '升级 VIP'}</span>
+            </Link>
+            <Link to="/user" className={`spotify-nav-item ${isActive('/user') ? 'active' : ''}`}>
+              <span className="nav-icon"><User size={22} /></span>
+              <span className="nav-label">个人中心</span>
+            </Link>
+            <button className="spotify-nav-item logout-btn" onClick={handleLogout}>
+              <span className="nav-icon"><LogOut size={22} /></span>
+              <span className="nav-label">登出</span>
+            </button>
+          </>
         )}
-        <Link to="/user" className={`spotify-nav-item ${isActive('/user') ? 'active' : ''}`}>
-          <span className="nav-icon"><User size={22} /></span>
-          <span className="nav-label">个人中心</span>
-        </Link>
-        <button className="spotify-nav-item logout-btn" onClick={handleLogout}>
-          <span className="nav-icon"><LogOut size={22} /></span>
-          <span className="nav-label">登出</span>
-        </button>
       </div>
     </div>
   );

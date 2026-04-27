@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { 
   HomePage, 
   PracticePage, 
@@ -20,6 +20,16 @@ import { AdminPiecesPage } from '@/components/admin';
 import { AdvancedStatisticsPage } from '@/components/premium';
 import { useAuthStore } from '@/services/auth';
 import { useSubscriptionStore } from '@/services/subscription';
+
+function HomePageWrapper() {
+  const navigate = useNavigate();
+  return (
+    <HomePage
+      onStartPractice={() => navigate('/practice')}
+      onOpenLibrary={() => navigate('/library')}
+    />
+  );
+}
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore();
@@ -50,7 +60,7 @@ export function AppRouter() {
     <ThemeProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<AppLayout><HomePage /></AppLayout>} />
+          <Route path="/" element={<AppLayout><HomePageWrapper /></AppLayout>} />
           <Route path="/practice" element={<AppLayout><PracticePage /></AppLayout>} />
           <Route path="/practice/:pieceId" element={<AppLayout><PracticePage /></AppLayout>} />
           <Route path="/library" element={<AppLayout><LibraryPage /></AppLayout>} />

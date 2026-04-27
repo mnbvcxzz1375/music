@@ -4,6 +4,7 @@ import { Search, Music, Clock, Star, Crown } from 'lucide-react';
 import { Button, Card, CardContent, CardHeader, Input, Tabs, TabItem } from '../UI';
 import { usePieceStore } from '@/services/piece';
 import { useOCRStore } from '@/services/ocr';
+import { useSubscriptionStore } from '@/services/subscription';
 import type { Piece, PieceFilter, InstrumentType, MusicGenre } from '@/services/piece/types';
 
 export interface LibraryPageProps {
@@ -63,6 +64,8 @@ export function LibraryPage({ onSelectPiece }: LibraryPageProps) {
     uploadPiece,
     toggleFavorite,
   } = usePieceStore();
+
+  const { isPremium } = useSubscriptionStore();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
@@ -152,6 +155,14 @@ export function LibraryPage({ onSelectPiece }: LibraryPageProps) {
   };
 
   const handleSelectPiece = (piece: Piece) => {
+    // VIP Check: Prevent opening premium pieces without subscription
+    if (piece.isPremium && !isPremium()) {
+      if (window.confirm(`"${piece.title}" 是 VIP 专属曲目。请先升级 VIP 会员以解锁全部内容！`)) {
+        navigate('/subscription');
+      }
+      return;
+    }
+
     onSelectPiece?.(piece);
     navigate(`/practice/${piece.id}`);
   };
