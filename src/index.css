@@ -6479,3 +6479,232 @@ body {
   z-index: 20;
 }
 
+/* ========== Design system additions for Spotify+Hostinger look ========== */
+/* Cards */
+.statistics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+  margin: 0;
+  align-items: start;
+}
+
+/* generic card-styling class for targeted components */
+.profile-card,
+.ai-insight-card,
+.subscription-plan-card,
+.statistics-card {
+  background: #181818; /* dark card */
+  border-radius: 8px;
+  padding: 24px;
+  color: #ffffff;
+  transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+
+/* Hover behaviour shared across card-like elements */
+.profile-card:hover,
+.ai-insight-card:hover,
+.subscription-plan-card:hover,
+.statistics-card:hover {
+  transform: translateY(-4px);
+  background: #282828;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.45);
+}
+
+/* Text styles for titles / secondary */
+.profile-card .card-title,
+.ai-insight-card .card-title,
+.subscription-plan-card .card-title {
+  color: #ffffff;
+}
+
+.profile-card .card-subtitle,
+.ai-insight-card .card-subtitle,
+.subscription-plan-card .card-subtitle {
+  color: #b3b3b3;
+}
+
+/* Stats: big numbers */
+.statistics-card .summary-stat-value,
+.profile-card .checkin-stat-value,
+.achievements-summary .achievements-points-value {
+  font-size: 2rem; /* large numbers */
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* Subscription plan card specifics */
+.subscription-plan-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 220px;
+}
+
+.subscription-plan-card .discount-badge,
+.subscription-plan-card .premium-badge {
+  background: rgba(212,175,55,0.12);
+  color: #d4af37;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+/* Leaderboard item */
+.leaderboard-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.leaderboard-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: transparent;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+/* highlight current user */
+.leaderboard-item.current-user {
+  background: linear-gradient(90deg, rgba(212,175,55,0.06), rgba(212,175,55,0.02));
+  border: 1px solid rgba(212,175,55,0.08);
+}
+
+.leaderboard-item:hover {
+  background: rgba(255,255,255,0.02);
+  transform: translateY(-2px);
+}
+
+.leaderboard-rank {
+  min-width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: inline-grid;
+  place-items: center;
+  font-weight: 700;
+  color: #ffffff;
+  background: rgba(255,255,255,0.04);
+}
+
+/* top ranks special color */
+.leaderboard-rank.top-1 { background: linear-gradient(90deg,#ffd700,#d4af37); color:#111; }
+.leaderboard-rank.top-2 { background: linear-gradient(90deg,#c0c0c0,#bdbdbd); color:#111; }
+.leaderboard-rank.top-3 { background: linear-gradient(90deg,#cd7f32,#b87333); color:#111; }
+
+/* Achievement badges & progress */
+.achievement-badge {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 1.6rem;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+/* achievement progress bar (gold accent) */
+.achievement-progress-bar {
+  background: rgba(255,255,255,0.03);
+  border-radius: 999px;
+  overflow: hidden;
+  height: 10px;
+}
+
+.achievement-progress-fill {
+  background: #d4af37;
+  height: 100%;
+  transition: width 300ms ease;
+}
+
+/* Checkin calendar */
+.checkin-calendar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.checkin-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.checkin-calendar-day,
+.checkin-calendar-day.other-month {
+  background: transparent;
+  border-radius: 8px;
+  padding: 8px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #b3b3b3;
+  border: 1px solid transparent;
+  transition: background 160ms ease, transform 120ms ease;
+}
+
+.checkin-calendar-day.today {
+  border: 1px solid rgba(212,175,55,0.18);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.checkin-calendar-day.checked {
+  background: linear-gradient(90deg, rgba(212,175,55,0.08), rgba(212,175,55,0.03));
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+/* AI insight cards */
+.ai-insight-card .card-title,
+.ai-insight-card .card-subtitle { color: #ffffff; }
+
+.ai-insight-card {
+  background: #181818;
+  border-radius: 8px;
+  padding: 20px;
+  border: 1px solid rgba(255,255,255,0.04);
+  transition: transform 180ms ease, background 180ms ease;
+}
+
+/* Prediction/pill numbers */
+.prediction-value.positive { color: #d4af37; font-weight: 700; }
+.prediction-value.negative { color: #e35b4f; font-weight: 700; }
+
+/* Progress bars (global small pattern) */
+.progress-bar {
+  height: 8px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #d4af37;
+  transition: width 260ms ease;
+}
+
+/* Utility */
+.card-small-padding { padding: 16px; }
+.card-large-padding { padding: 32px; }
+
+/* Keep the rest of the app responsive */
+@media (max-width: 760px) {
+  .statistics-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .achievement-badge { width: 48px; height: 48px; font-size: 1.2rem; }
+}
+/* ========== End design additions ========== */

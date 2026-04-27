@@ -109,9 +109,9 @@ export function LeaderboardPage({}: LeaderboardPageProps) {
             {loading ? (
               <div className="leaderboard-loading">加载中...</div>
             ) : (
-              <div className="leaderboard-list">
+              <ol className="leaderboard-list">
                 {leaderboard.map((entry) => (
-                  <div
+                  <li
                     key={entry.userId}
                     className={`leaderboard-item ${entry.userId === currentUserId ? 'current-user' : ''}`}
                   >
@@ -134,14 +134,14 @@ export function LeaderboardPage({}: LeaderboardPageProps) {
                           {Math.floor(entry.value / 60)}分钟
                         </span>
                       )}
-                    </div>
-                  </div>
-                ))}
-                
-                {leaderboard.length === 0 && (
-                  <div className="leaderboard-empty">暂无排名数据</div>
-                )}
-              </div>
+                      </div>
+                    </li>
+                  ))}
+                  
+                  {leaderboard.length === 0 && (
+                    <div className="leaderboard-empty">暂无排名数据</div>
+                  )}
+                </ol>
             )}
           </CardContent>
         </Card>

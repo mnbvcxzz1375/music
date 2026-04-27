@@ -70,12 +70,12 @@ export function SubscriptionPage({ onSelectPlan }: SubscriptionPageProps) {
     <div className="subscription-plans">
       <div className="plans-grid">
         {plans.map((plan) => (
-          <Card
-            key={plan.id}
-            variant={plan.isPremium ? 'elevated' : 'outlined'}
-            hoverable
-            className={plan.id === 'premium_yearly' ? 'plan-recommended' : ''}
-          >
+            <Card
+              key={plan.id}
+              variant={plan.id === 'premium_yearly' ? 'elevated' : 'outlined'}
+              hoverable
+              className={`subscription-plan-card ${plan.id === 'premium_yearly' ? 'plan-recommended' : ''}`}
+            >
             <CardHeader
               title={plan.name}
               subtitle={formatPrice(plan)}

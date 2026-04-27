@@ -127,7 +127,7 @@ export function CheckinPage({}: CheckinPageProps) {
 
       <main className="checkin-content">
         <div className="checkin-stats">
-          <Card variant="elevated">
+          <Card variant="elevated" className="profile-card">
             <CardContent>
               <div className="checkin-stat-card">
                 <div className="checkin-stat-value">{currentStreak}</div>
@@ -136,7 +136,7 @@ export function CheckinPage({}: CheckinPageProps) {
             </CardContent>
           </Card>
 
-          <Card variant="elevated">
+          <Card variant="elevated" className="profile-card">
             <CardContent>
               <div className="checkin-stat-card">
                 <div className="checkin-stat-value">{longestStreak}</div>
@@ -145,7 +145,7 @@ export function CheckinPage({}: CheckinPageProps) {
             </CardContent>
           </Card>
 
-          <Card variant="elevated">
+          <Card variant="elevated" className="profile-card">
             <CardContent>
               <div className="checkin-stat-card">
                 <div className="checkin-stat-value">{totalCheckins}</div>
@@ -154,7 +154,7 @@ export function CheckinPage({}: CheckinPageProps) {
             </CardContent>
           </Card>
 
-          <Card variant="elevated">
+          <Card variant="elevated" className="profile-card">
             <CardContent>
               <div className="checkin-stat-card">
                 <div className="checkin-stat-value">
@@ -175,7 +175,7 @@ export function CheckinPage({}: CheckinPageProps) {
           </div>
         )}
 
-        <Card>
+        <Card className="profile-card">
           <CardHeader title="打卡日历" />
           <CardContent>
             <div className="checkin-calendar">
@@ -215,7 +215,7 @@ export function CheckinPage({}: CheckinPageProps) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="profile-card">
           <CardHeader title="打卡奖励" subtitle="连续打卡解锁奖励" />
           <CardContent>
             <div className="checkin-rewards">
@@ -239,7 +239,7 @@ export function CheckinPage({}: CheckinPageProps) {
         </Card>
 
         {monthRecords.length > 0 && (
-          <Card>
+          <Card className="profile-card">
             <CardHeader title={`${monthLabel}打卡详情`} />
             <CardContent>
               <div className="month-stats-summary">

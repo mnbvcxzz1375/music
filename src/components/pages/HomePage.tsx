@@ -31,7 +31,7 @@ export function HomePage({
         </section>
 
         <section className="features-section">
-          <Card variant="elevated" hoverable>
+          <Card className="subscription-plan-card" variant="elevated" hoverable>
             <CardHeader title="实时音准检测" subtitle="精准识别每一个音符" />
             <CardContent>
               <p>
@@ -44,7 +44,7 @@ export function HomePage({
             </CardFooter>
           </Card>
 
-          <Card variant="elevated" hoverable>
+          <Card className="subscription-plan-card" variant="elevated" hoverable>
             <CardHeader title="智能节拍分析" subtitle="掌握节奏的精髓" />
             <CardContent>
               <p>
@@ -57,7 +57,7 @@ export function HomePage({
             </CardFooter>
           </Card>
 
-          <Card variant="elevated" hoverable>
+          <Card className="subscription-plan-card" variant="elevated" hoverable>
             <CardHeader title="个性化练习" subtitle="量身定制的练习方案" />
             <CardContent>
               <p>
@@ -75,7 +75,7 @@ export function HomePage({
           <Card>
             <CardHeader title="今日练习概览" />
             <CardContent>
-              <div className="stats-preview-grid">
+              <div className="statistics-grid">
                 <div className="stat-preview-item">
                   <span className="stat-preview-value">0</span>
                   <span className="stat-preview-label">练习时长</span>

@@ -94,7 +94,7 @@ export function AchievementsPage({ onShare }: AchievementsPageProps) {
               className={`achievement-card ${achievement.isUnlocked ? 'unlocked' : 'locked'} ${tierColors[achievement.tier]}`}
             >
               <CardContent>
-                <div className="achievement-icon">
+                <div className="achievement-icon achievement-badge">
                   {achievement.icon}
                 </div>
                 <div className="achievement-info">

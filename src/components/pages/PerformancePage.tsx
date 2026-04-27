@@ -38,7 +38,7 @@ export function PerformancePage({}: PerformancePageProps) {
       </header>
 
       <main className="performance-content">
-        <Card variant="elevated">
+        <Card variant="elevated" className="profile-card">
           <CardHeader title="FPS 监控" subtitle={isMonitoring ? '监控中' : '已停止'} />
           <CardContent>
             <div className="fps-display">
@@ -63,7 +63,7 @@ export function PerformancePage({}: PerformancePageProps) {
           </CardContent>
         </Card>
 
-        <Card variant="outlined">
+        <Card variant="outlined" className="profile-card">
           <CardHeader title="网络状态" />
           <CardContent>
             <div className="network-stats">

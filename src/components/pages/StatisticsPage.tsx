@@ -74,8 +74,8 @@ export function StatisticsPage({}: StatisticsPageProps) {
 
   const renderOverview = () => (
     <div className="stats-overview">
-      <div className="stats-summary-grid">
-        <Card variant="elevated">
+      <div className="statistics-grid">
+        <Card className="statistics-card" variant="elevated">
           <CardContent>
             <div className="summary-stat">
               <span className="summary-stat-value">{formatDuration(stats.totalDuration)}</span>
@@ -84,7 +84,7 @@ export function StatisticsPage({}: StatisticsPageProps) {
           </CardContent>
         </Card>
 
-        <Card variant="elevated">
+        <Card className="statistics-card" variant="elevated">
           <CardContent>
             <div className="summary-stat">
               <span className="summary-stat-value">{stats.totalSessions}</span>
@@ -93,7 +93,7 @@ export function StatisticsPage({}: StatisticsPageProps) {
           </CardContent>
         </Card>
 
-        <Card variant="elevated">
+        <Card className="statistics-card" variant="elevated">
           <CardContent>
             <div className="summary-stat">
               <span className="summary-stat-value">{stats.totalPieces}</span>
@@ -102,7 +102,7 @@ export function StatisticsPage({}: StatisticsPageProps) {
           </CardContent>
         </Card>
 
-        <Card variant="elevated">
+        <Card className="statistics-card" variant="elevated">
           <CardContent>
             <div className="summary-stat">
               <span className="summary-stat-value">{stats.averageAccuracy.toFixed(1)}%</span>
@@ -111,7 +111,7 @@ export function StatisticsPage({}: StatisticsPageProps) {
           </CardContent>
         </Card>
 
-        <Card variant="elevated">
+        <Card className="statistics-card" variant="elevated">
           <CardContent>
             <div className="summary-stat">
               <span className="summary-stat-value">{streakDays}</span>
@@ -120,7 +120,7 @@ export function StatisticsPage({}: StatisticsPageProps) {
           </CardContent>
         </Card>
 
-        <Card variant="elevated">
+        <Card className="statistics-card" variant="elevated">
           <CardContent>
             <div className="summary-stat">
               <span className="summary-stat-value">{formatDuration(todayStats.durationSeconds)}</span>
@@ -130,7 +130,7 @@ export function StatisticsPage({}: StatisticsPageProps) {
         </Card>
       </div>
 
-      <Card>
+      <Card className="profile-card">
         <CardHeader title="今日详情" />
         <CardContent>
           <div className="today-details">
@@ -232,7 +232,7 @@ export function StatisticsPage({}: StatisticsPageProps) {
 
     return (
       <div className="stats-trends">
-        <Card>
+        <Card className="profile-card">
           <CardHeader title="准确率趋势" subtitle="最近30天" />
           <CardContent>
             <div className="trend-chart" style={{ height: '200px' }}>
@@ -241,7 +241,7 @@ export function StatisticsPage({}: StatisticsPageProps) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="profile-card">
           <CardHeader title="练习时长趋势" subtitle="最近30天" />
           <CardContent>
             <div className="trend-chart" style={{ height: '200px' }}>
@@ -279,7 +279,7 @@ export function StatisticsPage({}: StatisticsPageProps) {
 
   const renderHistory = () => (
     <div className="stats-history">
-      <Card>
+      <Card className="profile-card">
         <CardHeader title="练习记录" />
         <CardContent>
           <div className="history-list">

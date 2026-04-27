@@ -44,7 +44,7 @@ export function AIAnalysisPage({}: AIAnalysisPageProps) {
     };
 
     return (
-      <Card key={`${weakness.type}-${weakness.severity}`}>
+      <Card className="ai-insight-card" key={`${weakness.type}-${weakness.severity}`}>
         <CardHeader
           title={typeLabels[weakness.type]}
           action={
@@ -98,7 +98,7 @@ export function AIAnalysisPage({}: AIAnalysisPageProps) {
     };
 
     return (
-      <Card key={rec.id}>
+      <Card className="ai-insight-card" key={rec.id}>
         <CardHeader
           title={rec.title}
           subtitle={typeLabels[rec.type]}
@@ -161,7 +161,7 @@ export function AIAnalysisPage({}: AIAnalysisPageProps) {
 
       <main className="ai-analysis-content">
         <div className="ai-overall-score">
-          <Card>
+          <Card className="ai-insight-card">
             <CardContent>
               <div className="overall-score-display">
                 <span className="overall-score-value">
@@ -174,7 +174,7 @@ export function AIAnalysisPage({}: AIAnalysisPageProps) {
         </div>
 
         <div className="ai-progress-prediction">
-          <Card>
+          <Card className="ai-insight-card">
             <CardHeader title="进步预测" subtitle="基于近期练习数据" />
             <CardContent>
               <div className="prediction-grid">
@@ -218,7 +218,7 @@ export function AIAnalysisPage({}: AIAnalysisPageProps) {
               {analysisResult?.weaknesses?.map(renderWeaknessCard)}
             </div>
           ) : (
-            <Card>
+            <Card className="ai-insight-card">
               <CardContent>
                 <div className="no-weaknesses">
                   <span className="no-weaknesses-icon">🎉</span>
@@ -236,7 +236,7 @@ export function AIAnalysisPage({}: AIAnalysisPageProps) {
               {analysisResult?.recommendations?.slice(0, 5).map(renderRecommendationCard)}
             </div>
           ) : (
-            <Card>
+            <Card className="ai-insight-card">
               <CardContent>
                 <div className="no-recommendations">
                   <p>暂无特别建议，继续按当前计划练习</p>
