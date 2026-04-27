@@ -5712,58 +5712,93 @@ body {
   background: linear-gradient(180deg, #181818 0%, #000000 100%);
 }
 
-/* Instagram Login Page */
+/* Instagram Login Page - Force light theme overrides */
 .login-page {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: #fafafa;
+  background-color: #fafafa !important;
 }
 
-.login-container {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.login-page * {
+  /* Reset inherited dark theme colors inside login page */
 }
 
 .login-card {
-  background-color: #ffffff;
-  border: 1px solid #dbdbdb;
-  border-radius: 4px;
+  background-color: #ffffff !important;
+  border: 1px solid #dbdbdb !important;
+  border-radius: 12px;
   padding: 40px;
-  width: 350px;
+  width: 380px;
   text-align: center;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
 }
 
 .login-logo {
   font-family: var(--font-family-display);
   font-size: 32px;
   margin-bottom: 30px;
-  color: #000;
+  color: #000 !important;
 }
 
-.auth-form {
+/* Override Input component dark theme inside login card */
+.login-card .input-wrapper {
+  color: #262626 !important;
+}
+
+.login-card .input-container {
+  background-color: #fafafa !important;
+  border: 1px solid #dbdbdb !important;
+  border-radius: 6px;
+}
+
+.login-card .input-container:focus-within {
+  border-color: #a8a8a8 !important;
+  box-shadow: none !important;
+}
+
+.login-card .input-field {
+  color: #262626 !important;
+  background: transparent !important;
+}
+
+.login-card .input-field::placeholder {
+  color: #8e8e8e !important;
+}
+
+.login-card .input-label {
+  display: none !important; /* Hide label inside login card */
+}
+
+.login-card .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
-.auth-input {
-  background-color: #fafafa;
-  border: 1px solid #dbdbdb;
-  border-radius: 4px;
-  padding: 9px 8px;
-  font-size: 12px;
-  color: #000;
+.login-btn {
+  margin-top: 8px;
+  border-radius: 8px;
+  height: 44px;
+  font-weight: 600;
+  font-size: 15px;
 }
 
-.auth-input:focus {
-  outline: none;
-  border-color: #a8a8a8;
+.login-switch {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 14px;
+  color: #8e8e8e;
 }
 
-.auth-divider {
+.switch-link {
+  color: #d4af37;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.login-divider {
   display: flex;
   align-items: center;
   margin: 20px 0;
@@ -5772,41 +5807,46 @@ body {
   font-weight: 600;
 }
 
-.auth-divider .line {
+.login-divider .line {
   flex: 1;
   height: 1px;
   background-color: #dbdbdb;
 }
 
-.auth-divider span {
+.login-divider span {
   padding: 0 16px;
 }
 
-.social-login-btn {
-  background-color: #0095f6;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  font-weight: 600;
-  font-size: 14px;
-  margin-bottom: 16px;
+.login-preview {
+  display: none; /* Hide gradient preview for clean centered login */
 }
 
-.login-toggle {
-  background-color: #ffffff;
-  border: 1px solid #dbdbdb;
-  border-radius: 4px;
-  padding: 20px;
-  text-align: center;
-  font-size: 14px;
-  color: #262626;
+/* Tabs inside login card */
+.login-card .tabs-underline {
+  border-bottom-color: #dbdbdb !important;
 }
 
-.link-text {
-  color: #0095f6;
-  font-weight: 600;
-  cursor: pointer;
-  margin-left: 8px;
+.login-card .tab-item {
+  color: #8e8e8e !important;
+}
+
+.login-card .tab-item-active {
+  color: #000 !important;
+}
+
+
+/* Header user profile - fixed icon size */
+.header-user-profile {
+  width: 40px !important;
+  height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+}
+
+.header-user-profile .user-avatar {
+  font-size: 20px !important;
 }
 
 /* Profile Page */

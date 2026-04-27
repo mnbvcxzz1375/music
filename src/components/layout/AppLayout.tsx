@@ -44,10 +44,10 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   // Navigation Items
   const navItems = [
-    { id: 'home', label: t.nav.home, href: '/', icon: <Home size={22} /> },
-    { id: 'library', label: t.nav.library, href: '/library', icon: <BookOpen size={22} /> },
-    { id: 'practice', label: t.nav.practice, href: '/practice', icon: <Music size={22} /> },
-    { id: 'statistics', label: t.nav.statistics, href: '/statistics', icon: <BarChart size={22} /> },
+    { id: 'home', label: t.nav.home, href: '/', icon: <Home size={20} /> },
+    { id: 'library', label: t.nav.library, href: '/library', icon: <BookOpen size={20} /> },
+    { id: 'practice', label: t.nav.practice, href: '/practice', icon: <Music size={20} /> },
+    { id: 'statistics', label: t.nav.statistics, href: '/statistics', icon: <BarChart size={20} /> },
   ];
 
   const handleLogout = () => {
@@ -89,21 +89,21 @@ export function AppLayout({ children }: AppLayoutProps) {
       <div className="spotify-sidebar-footer">
         {!isAuthenticated ? (
           <Link to="/user" className="spotify-nav-item" style={{ color: '#1ed760', fontWeight: 'bold' }}>
-            <span className="nav-icon"><User size={22} /></span>
+            <span className="nav-icon"><User size={20} /></span>
             <span className="nav-label">登录 / 注册</span>
           </Link>
         ) : (
           <>
             <Link to="/subscription" className={`spotify-nav-item ${isActive('/subscription') ? 'active' : ''}`}>
-              <span className="nav-icon"><Crown size={22} /></span>
+              <span className="nav-icon"><Crown size={20} /></span>
               <span className="nav-label">{isPremium() ? '会员中心' : '升级 VIP'}</span>
             </Link>
             <Link to="/user" className={`spotify-nav-item ${isActive('/user') ? 'active' : ''}`}>
-              <span className="nav-icon"><User size={22} /></span>
+              <span className="nav-icon"><User size={20} /></span>
               <span className="nav-label">个人中心</span>
             </Link>
             <button className="spotify-nav-item logout-btn" onClick={handleLogout}>
-              <span className="nav-icon"><LogOut size={22} /></span>
+              <span className="nav-icon"><LogOut size={20} /></span>
               <span className="nav-label">登出</span>
             </button>
           </>
@@ -134,7 +134,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         <header className="spotify-content-header">
           <div className="header-actions" style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
             <ThemeToggle />
-            <Link to="/user" className="header-user-profile" style={{ background: 'var(--spotify-card-bg)', borderRadius: '50%', padding: '8px', color: 'var(--spotify-text-primary)' }}>
+            <Link to="/user" className="header-user-profile" style={{ background: 'var(--spotify-card-bg)', borderRadius: '50%', width: '36px', height: '36px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--spotify-text-primary)' }}>
               <span className="user-avatar"><User size={18} /></span>
             </Link>
           </div>
