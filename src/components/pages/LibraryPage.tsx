@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Music, Clock, Play, Star, Crown } from 'lucide-react';
+import { Search, Music, Clock, Star, Crown } from 'lucide-react';
 import { Button, Card, CardContent, CardHeader, Input, Tabs, TabItem } from '../UI';
 import { usePieceStore } from '@/services/piece';
 import { useOCRStore } from '@/services/ocr';
@@ -351,71 +351,46 @@ export function LibraryPage({ onSelectPiece }: LibraryPageProps) {
           </div>
         </div>
 
-        <div className="library-grid">
+        <div className="library-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '24px' }}>
           {displayedPieces.map((piece) => (
-            <Card
-              key={piece.id}
-              variant="elevated"
-              hoverable
+            <div 
+              key={piece.id} 
+              className="hostinger-card"
               onClick={() => handleSelectPiece(piece)}
             >
-              <CardHeader
-                title={piece.title}
-                subtitle={piece.composer || '未知作曲家'}
-                action={
-                  <div className="piece-header-actions">
-                    {piece.isPremium && (
-                      <span className="premium-badge premium-badge-small">
-                        <Crown size={14} />
-                        VIP
-                      </span>
-                    )}
-                    <span className={getDifficultyClass(piece.difficulty)}>
-                      {getDifficultyLabel(piece.difficulty)}
+              <div className="hostinger-card-cover">
+                <Music size={48} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ minWidth: 0, paddingRight: '8px' }}>
+                  <h3 className="hostinger-card-title" title={piece.title}>{piece.title}</h3>
+                  <p className="hostinger-card-subtitle" title={piece.composer || '未知作曲家'}>{piece.composer || '未知作曲家'}</p>
+                </div>
+                <button
+                  onClick={(e) => handleToggleFavorite(piece.id, e)}
+                  style={{ background: 'transparent', border: 'none', color: isFavorite(piece.id) ? 'var(--color-accent-default)' : 'var(--spotify-text-secondary)', cursor: 'pointer', padding: '4px' }}
+                >
+                  <Star fill={isFavorite(piece.id) ? 'currentColor' : 'none'} size={18} />
+                </button>
+              </div>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '8px' }}>
+                <span className="piece-info-item" style={{ fontSize: '12px', color: 'var(--spotify-text-secondary)', margin: 0 }}>
+                  <Clock size={12} style={{ marginRight: '4px' }} />
+                  {formatDuration(piece.durationSeconds)}
+                </span>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  {piece.isPremium && (
+                    <span className="premium-badge premium-badge-small" style={{ display: 'flex', alignItems: 'center' }}>
+                      <Crown size={12} />
                     </span>
-                  </div>
-                }
-              />
-              <CardContent>
-                <div className="piece-info">
-                  <span className="piece-info-item">
-                    <span className="piece-info-icon"><Music size={14} /></span>
-                    {piece.instrumentTypes.map(i => instrumentLabels[i]).join(', ')}
-                  </span>
-                  <span className="piece-info-item">
-                    <span className="piece-info-icon"><Clock size={14} /></span>
-                    {formatDuration(piece.durationSeconds)}
-                  </span>
-                  <span className="piece-info-item">
-                    <span className="piece-info-icon"><Play size={14} /></span>
-                    {piece.playCount}次
+                  )}
+                  <span className={getDifficultyClass(piece.difficulty)} style={{ fontSize: '12px', padding: '2px 6px', borderRadius: '4px', background: 'rgba(255,255,255,0.1)' }}>
+                    {getDifficultyLabel(piece.difficulty)}
                   </span>
                 </div>
-                <div className="piece-genres">
-                  {piece.genres.map(genre => (
-                    <span key={genre} className="piece-genre-tag">
-                      {genreLabels[genre]}
-                    </span>
-                  ))}
-                </div>
-                <div className="piece-tags">
-                  {piece.tags.slice(0, 3).map((tag) => (
-                    <span key={tag} className="piece-tag">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <div className="piece-footer">
-                  <Button
-                    variant="ghost"
-                    size="small"
-                    onClick={(e) => handleToggleFavorite(piece.id, e)}
-                  >
-                    {isFavorite(piece.id) ? <><Star fill="currentColor" size={14} className="inline-icon" /> 已收藏</> : <><Star size={14} className="inline-icon" /> 收藏</>}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
 

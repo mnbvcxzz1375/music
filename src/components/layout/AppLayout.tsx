@@ -62,22 +62,22 @@ export function AppLayout({ children }: AppLayoutProps) {
   };
 
   const SidebarContent = () => (
-    <div className="sidebar-inner">
+    <div className="spotify-sidebar-inner">
       {/* Sidebar Header / Logo */}
-      <div className="sidebar-header">
-        <Link to="/" className="sidebar-brand">
+      <div className="spotify-sidebar-header">
+        <Link to="/" className="spotify-brand">
           <span className="brand-icon">🎵</span>
           <span className="brand-text">Resonance</span>
         </Link>
       </div>
 
       {/* Navigation Links */}
-      <nav className="sidebar-nav">
+      <nav className="spotify-nav">
         {navItems.map((item) => (
           <Link 
             key={item.id} 
             to={item.href}
-            className={`nav-item ${isActive(item.href) ? 'active' : ''}`}
+            className={`spotify-nav-item ${isActive(item.href) ? 'active' : ''}`}
           >
             <span className="nav-icon">{item.icon}</span>
             <span className="nav-label">{item.label}</span>
@@ -86,18 +86,18 @@ export function AppLayout({ children }: AppLayoutProps) {
       </nav>
 
       {/* Sidebar Footer */}
-      <div className="sidebar-footer">
+      <div className="spotify-sidebar-footer">
         {!isPremium() && (
-          <Link to="/subscription" className="nav-item premium-upgrade">
+          <Link to="/subscription" className="spotify-nav-item premium-upgrade" style={{ color: '#f59e0b' }}>
             <span className="nav-icon"><Crown size={22} /></span>
             <span className="nav-label">升级 VIP</span>
           </Link>
         )}
-        <Link to="/user" className={`nav-item ${isActive('/user') ? 'active' : ''}`}>
+        <Link to="/user" className={`spotify-nav-item ${isActive('/user') ? 'active' : ''}`}>
           <span className="nav-icon"><User size={22} /></span>
           <span className="nav-label">个人中心</span>
         </Link>
-        <button className="nav-item logout-btn" onClick={handleLogout}>
+        <button className="spotify-nav-item logout-btn" onClick={handleLogout}>
           <span className="nav-icon"><LogOut size={22} /></span>
           <span className="nav-label">登出</span>
         </button>
@@ -106,34 +106,34 @@ export function AppLayout({ children }: AppLayoutProps) {
   );
 
   return (
-    <div className="app-layout spotify-layout">
+    <div className="spotify-layout">
       {/* Mobile Header */}
-      <div className="mobile-header">
-        <button className="menu-toggle" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+      <div className="spotify-mobile-header">
+        <button className="menu-toggle" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} style={{ background: 'transparent', border: 'none', color: 'var(--spotify-text-primary)' }}>
           {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
-        <Link to="/" className="mobile-brand">Resonance</Link>
+        <Link to="/" className="spotify-brand" style={{ fontSize: '18px' }}>Resonance</Link>
         <ThemeToggle />
       </div>
 
       {/* Sidebar (Desktop + Mobile Drawer) */}
-      <aside className={`sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
+      <aside className={`spotify-sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
         <SidebarContent />
       </aside>
       
       {/* Main Content Area */}
-      <div className="main-wrapper">
+      <div className="spotify-main-wrapper">
         {/* Sticky Header inside content */}
-        <header className="content-header">
-          <div className="header-actions">
+        <header className="spotify-content-header">
+          <div className="header-actions" style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
             <ThemeToggle />
-            <Link to="/user" className="header-user-profile">
+            <Link to="/user" className="header-user-profile" style={{ background: 'var(--spotify-card-bg)', borderRadius: '50%', padding: '8px', color: 'var(--spotify-text-primary)' }}>
               <span className="user-avatar"><User size={18} /></span>
             </Link>
           </div>
         </header>
 
-        <main className="app-main" onClick={() => isMobileMenuOpen && setIsMobileMenuOpen(false)}>
+        <main className="app-main" onClick={() => isMobileMenuOpen && setIsMobileMenuOpen(false)} style={{ flex: 1, padding: '32px' }}>
           <div className="content-inner">
             {children}
           </div>

@@ -5913,3 +5913,309 @@ body {
   font-size: 14px;
   color: var(--color-text-secondary);
 }
+
+/* ==========================================================================
+   Phase 2: Spotify & Hostinger Styles
+   ========================================================================== */
+
+/* Theme overrides / new variables for Spotify dark mode */
+:root, [data-theme='dark'] {
+  --spotify-sidebar-bg: #000000;
+  --spotify-main-bg: #121212;
+  --spotify-card-bg: #181818;
+  --spotify-card-hover: #282828;
+  --spotify-text-secondary: #b3b3b3;
+  --spotify-text-primary: #ffffff;
+}
+
+/* Spotify Layout System */
+.spotify-layout {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: var(--spotify-main-bg);
+  color: var(--spotify-text-primary);
+}
+
+.spotify-sidebar {
+  width: 240px;
+  background-color: var(--spotify-sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+  z-index: 100;
+  overflow-y: auto;
+}
+
+.spotify-main-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* allows flex children to shrink */
+  background-color: var(--spotify-main-bg);
+  overflow-y: auto;
+  position: relative;
+}
+
+/* Hostinger-style Album Cards */
+.hostinger-card {
+  background-color: var(--spotify-card-bg);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.hostinger-card:hover {
+  background-color: var(--spotify-card-hover);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.hostinger-card-cover {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-color: #333;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  margin-bottom: 8px;
+}
+
+.hostinger-card-cover svg {
+  width: 48px;
+  height: 48px;
+  color: var(--spotify-text-secondary);
+}
+
+.hostinger-card-title {
+  color: var(--spotify-text-primary);
+  font-weight: 700;
+  font-size: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.hostinger-card-subtitle {
+  color: var(--spotify-text-secondary);
+  font-size: 14px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .spotify-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    transform: translateX(-100%);
+  }
+  
+  .spotify-sidebar.open {
+    transform: translateX(0);
+  }
+}
+
+/* Spotify Sidebar Nav */
+.spotify-sidebar-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 24px;
+}
+
+.spotify-sidebar-header {
+  margin-bottom: 32px;
+}
+
+.spotify-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: var(--spotify-text-primary);
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.spotify-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.spotify-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-decoration: none;
+  padding: 12px 16px;
+  border-radius: 8px;
+  color: var(--spotify-text-secondary);
+  background: transparent;
+  transition: all 0.2s ease;
+  font-weight: 600;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.spotify-nav-item:hover {
+  color: var(--spotify-text-primary);
+}
+
+.spotify-nav-item.active {
+  color: var(--spotify-text-primary);
+  background: var(--spotify-card-hover);
+}
+
+.spotify-sidebar-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 24px;
+  border-top: 1px solid #282828;
+}
+
+.spotify-mobile-header {
+  display: none;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background-color: var(--spotify-sidebar-bg);
+}
+
+.spotify-content-header {
+  position: sticky;
+  top: 0;
+  height: 64px;
+  background-color: rgba(18, 18, 18, 0.9);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0 32px;
+  z-index: 50;
+}
+
+@media (max-width: 768px) {
+  .spotify-mobile-header {
+    display: flex;
+  }
+}
+
+/* Phase 2: Spotify Variables & Layout (Completing what was missing) */
+:root {
+  --spotify-sidebar-bg: #000000;
+  --spotify-main-bg: #121212;
+  --spotify-card-bg: #181818;
+  --spotify-card-hover: #282828;
+  --spotify-text-primary: #ffffff;
+  --spotify-text-secondary: #b3b3b3;
+}
+
+body {
+  background-color: var(--spotify-main-bg);
+  color: var(--spotify-text-primary);
+}
+
+.spotify-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.spotify-sidebar {
+  width: 240px;
+  background-color: var(--spotify-sidebar-bg);
+  flex-shrink: 0;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+}
+
+.spotify-main-wrapper {
+  flex: 1;
+  background-color: var(--spotify-main-bg);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Hostinger Card Styles */
+.hostinger-card {
+  background-color: var(--spotify-card-bg);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transition: background-color 300ms ease, transform 150ms ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.hostinger-card:hover {
+  background-color: var(--spotify-card-hover);
+  transform: translateY(-6px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
+}
+
+.hostinger-card-cover {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-color: #282828;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.hostinger-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--spotify-text-primary);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hostinger-card-subtitle {
+  font-size: 14px;
+  color: var(--spotify-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 12px;
+}
+
