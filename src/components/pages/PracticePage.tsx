@@ -4,7 +4,7 @@ import ScoreRenderer from '../ScoreRenderer/ScoreRenderer';
 import PitchIndicator from '../PitchIndicator/PitchIndicator';
 import PartSelector from '../PartSelector/PartSelector';
 import { Calibration } from '../Calibration';
-import { Button, Card, CardContent, Tabs, TabItem } from '../UI';
+import { Button } from '../UI';
 import { ScoreRendererHandle } from '../ScoreRenderer/types';
 import { AudioCapture } from '@/audio/AudioCapture';
 import { PitchDetector } from '@/audio/detection/PitchDetector';
@@ -32,7 +32,7 @@ export function PracticePage({ xmlContent, onComplete }: PracticePageProps) {
   const [showCalibration, setShowCalibration] = useState(false);
   const [score, setScore] = useState<Score | null>(null);
   const [selectedPartId, setSelectedPartId] = useState<string>('');
-  const [activeTab, setActiveTab] = useState('controls');
+  const [activeTab, setActiveTab] = useState<'controls' | 'parts' | 'stats'>('controls');
 
   const [detectedPitch, setDetectedPitch] = useState<number | null>(null);
   const [expectedPitch, setExpectedPitch] = useState<number | null>(null);
@@ -198,7 +198,6 @@ export function PracticePage({ xmlContent, onComplete }: PracticePageProps) {
   }, [practiceStartTime, pieceId, pieceTitle, progressInfo, tempo, addSession, stats, checkAchievements]);
 
   const handleStartPractice = async () => {
-    // VIP check: prevent practice for premium pieces without subscription
     if (currentPiece?.isPremium && !isPremium()) {
       alert('此曲目为 VIP 专属内容，请先升级为 VIP 会员');
       navigate('/subscription');
@@ -288,75 +287,99 @@ export function PracticePage({ xmlContent, onComplete }: PracticePageProps) {
     navigate('/statistics');
   };
 
-  const tabs: TabItem[] = [
-    { id: 'controls', label: '控制' },
-    { id: 'parts', label: '声部' },
-    { id: 'stats', label: '统计' },
-  ];
-
   return (
-    <div className="practice-page">
-      <header className="practice-header">
-        <div className="practice-header-left">
-          <h1 className="practice-title">练习模式</h1>
-          <p className="practice-piece-name">{pieceTitle}</p>
-        </div>
-        <div className="practice-header-right">
-          <Button variant="ghost" onClick={() => setShowCalibration(true)}>
-            校准
-          </Button>
+    <div className="practice-layout">
+      <header className="practice-topbar">
+        <div className="practice-topbar-left">
           {pieceId && (
-            <Button variant="secondary" onClick={() => navigate('/library')}>
-              返回曲库
+            <Button variant="secondary" onClick={() => navigate('/library')} size="small">
+              ← 返回曲库
             </Button>
           )}
         </div>
+        <div className="practice-topbar-right">
+          <Button variant="ghost" onClick={() => setShowCalibration(true)} size="small">
+            🎙 校准
+          </Button>
+        </div>
       </header>
 
-      <div className="practice-content">
-        <div className="practice-score-section">
-          <Card variant="outlined" padding="large">
+      <main className="practice-main">
+        <div className="practice-hero">
+          <div className="practice-score-wrapper">
             <div className="score-container">
               <ScoreRenderer
                 ref={scoreRef}
                 xml={xmlContent || fetchedXml || defaultXml}
-                highlightColor="#d4af37"
+                highlightColor="#1ed760"
               />
             </div>
-          </Card>
-
+          </div>
+          
           {isPlaying && (
-            <Card variant="default" padding="medium">
-              <CardContent>
-                <PitchIndicator
-                  centsDeviation={centsDeviation}
-                  expectedPitch={expectedPitch}
-                  detectedPitch={detectedPitch}
-                  confidence={confidence}
-                />
-              </CardContent>
-            </Card>
+            <div className="pitch-indicator-wrapper">
+              <PitchIndicator
+                centsDeviation={centsDeviation}
+                expectedPitch={expectedPitch}
+                detectedPitch={detectedPitch}
+                confidence={confidence}
+              />
+            </div>
           )}
         </div>
 
         <aside className="practice-sidebar">
-          <Tabs
-            items={tabs}
-            activeId={activeTab}
-            onChange={setActiveTab}
-            variant="underline"
-          />
+          <div className="practice-piece-info">
+            <h2 className="practice-piece-title">{pieceTitle}</h2>
+            <p className="practice-piece-composer">{currentPiece?.composer || '未知作曲家'}</p>
+          </div>
 
-          <Card variant="default" padding="medium">
+          <div className="practice-tabs">
+            <button 
+              className={`practice-tab-btn ${activeTab === 'controls' ? 'active' : ''}`}
+              onClick={() => setActiveTab('controls')}
+            >
+              控制
+            </button>
+            <button 
+              className={`practice-tab-btn ${activeTab === 'parts' ? 'active' : ''}`}
+              onClick={() => setActiveTab('parts')}
+            >
+              声部
+            </button>
+            <button 
+              className={`practice-tab-btn ${activeTab === 'stats' ? 'active' : ''}`}
+              onClick={() => setActiveTab('stats')}
+            >
+              统计
+            </button>
+          </div>
+
+          <div className="practice-sidebar-content">
             {activeTab === 'controls' && (
               <div className="practice-controls">
-                <div className="control-group">
-                  <label className="control-label">
+                {!isPlaying ? (
+                  <button className="practice-play-btn gold" onClick={handleStartPractice} aria-label="Play">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </button>
+                ) : (
+                  <button className="practice-stop-btn" onClick={handleStopPractice} aria-label="Stop">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M6 6h12v12H6z" />
+                    </svg>
+                  </button>
+                )}
+
+                <div className="tempo-control">
+                  <div className="tempo-header">
                     <span>速度</span>
                     <span>{tempo} BPM</span>
-                  </label>
+                  </div>
                   <input
                     type="range"
+                    className="tempo-slider"
                     min="40"
                     max="240"
                     value={tempo}
@@ -365,28 +388,10 @@ export function PracticePage({ xmlContent, onComplete }: PracticePageProps) {
                   />
                 </div>
 
-                <div className="control-group">
-                  {!isPlaying ? (
-                    <Button
-                      variant="primary"
-                      fullWidth
-                      onClick={handleStartPractice}
-                    >
-                      开始练习
-                    </Button>
-                  ) : (
-                    <Button variant="danger" fullWidth onClick={handleStopPractice}>
-                      停止练习
-                    </Button>
-                  )}
-                </div>
-
                 {!isPlaying && practiceStartTime === null && progressInfo.totalNotes > 0 && (
-                  <div className="control-group">
-                    <Button variant="secondary" fullWidth onClick={handleFinishPractice}>
-                      查看统计
-                    </Button>
-                  </div>
+                  <Button variant="secondary" fullWidth onClick={handleFinishPractice} style={{ marginTop: 16 }}>
+                    查看完整统计
+                  </Button>
                 )}
               </div>
             )}
@@ -401,53 +406,36 @@ export function PracticePage({ xmlContent, onComplete }: PracticePageProps) {
 
             {activeTab === 'stats' && (
               <div className="practice-stats">
-                <div className="stats-grid">
-                  <div className="stat-box">
-                    <div className="stat-value">
-                      {progressInfo.accuracy.toFixed(0)}%
-                    </div>
-                    <div className="stat-label">准确率</div>
-                  </div>
-                  <div className="stat-box">
-                    <div className="stat-value">{progressInfo.errorCount}</div>
-                    <div className="stat-label">错误数</div>
-                  </div>
-                  <div className="stat-box">
-                    <div className="stat-value">{progressInfo.totalNotes}</div>
-                    <div className="stat-label">总音符</div>
-                  </div>
-                  <div className="stat-box">
-                    <div className="stat-value">{progressInfo.correctNotes}</div>
-                    <div className="stat-label">正确数</div>
-                  </div>
+                <div className="stat-item">
+                  <span className="stat-item-value">{progressInfo.accuracy.toFixed(0)}%</span>
+                  <span className="stat-item-label">准确率</span>
                 </div>
-
+                <div className="stat-item">
+                  <span className="stat-item-value">{progressInfo.errorCount}</span>
+                  <span className="stat-item-label">错误数</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-item-value">{progressInfo.totalNotes}</span>
+                  <span className="stat-item-label">总音符</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-item-value">{progressInfo.correctNotes}</span>
+                  <span className="stat-item-label">正确数</span>
+                </div>
+                
                 {practiceStartTime && (
-                  <div className="practice-duration">
-                    <div className="stat-box">
-                      <div className="stat-value">
-                        {Math.floor((new Date().getTime() - practiceStartTime.getTime()) / 1000)}s
-                      </div>
-                      <div className="stat-label">练习时长</div>
-                    </div>
+                  <div className="stat-item" style={{ gridColumn: '1 / -1' }}>
+                    <span className="stat-item-value">
+                      {Math.floor((new Date().getTime() - practiceStartTime.getTime()) / 1000)}s
+                    </span>
+                    <span className="stat-item-label">本次时长</span>
                   </div>
                 )}
-
-                <div className="practice-session-stats">
-                  <div className="stat-box">
-                    <div className="stat-value">{stats.totalSessions}</div>
-                    <div className="stat-label">总练习次数</div>
-                  </div>
-                  <div className="stat-box">
-                    <div className="stat-value">{stats.streakDays}</div>
-                    <div className="stat-label">连续天数</div>
-                  </div>
-                </div>
               </div>
             )}
-          </Card>
+          </div>
         </aside>
-      </div>
+      </main>
 
       {showCalibration && (
         <Calibration
@@ -458,3 +446,4 @@ export function PracticePage({ xmlContent, onComplete }: PracticePageProps) {
     </div>
   );
 }
+
