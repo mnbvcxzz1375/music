@@ -134,7 +134,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         <header className="spotify-content-header">
           <div className="header-actions" style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
             <ThemeToggle />
-            <Link to="/user" className="header-user-profile" style={{ background: 'var(--spotify-card-bg)', borderRadius: '50%', width: '36px', height: '36px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--spotify-text-primary)' }}>
+            <Link to="/user" className="header-user-profile" style={{ background: 'var(--spotify-card-bg)', borderRadius: '50%', width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--spotify-text-primary)', flexShrink: 0 }}>
               <span className="user-avatar"><User size={18} /></span>
             </Link>
           </div>
