@@ -6711,44 +6711,10 @@ body {
   /* Fix mobile content header actions */
   .spotify-content-header {
     padding: 0 12px !important;
-    height: 56px;
+    height: 4px;
   }
 
-  .spotify-content-header .header-actions {
-    gap: 8px !important;
-  }
-}
-
-  .practice-main {
-    flex-direction: column;
-    padding: 12px;
-    overflow: visible;
-    height: auto;
-  }
-
-  .practice-hero {
-    min-height: 300px;
-    order: 1;
-  }
-
-  .practice-sidebar {
-    width: 100%;
-    order: 2;
-    padding: 16px;
-  }
-
-  .practice-tabs {
-    flex-wrap: wrap;
-  }
-
-  .practice-tab-btn {
-    flex: 1;
-    min-width: 80px;
-    padding: 8px;
-    font-size: 12px;
-  }
-
-  /* Fix sidebar width on mobile */
+  /* Mobile sidebar slide-out drawer */
   .spotify-sidebar {
     position: fixed;
     left: 0;
@@ -6766,23 +6732,7 @@ body {
     transform: translateX(0);
   }
 
-  /* Overlay to close sidebar */
-  .sidebar-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-  }
-
-  .sidebar-overlay.open {
-    display: block;
-  }
-
-  /* Fix mobile header */
+  /* Mobile header */
   .spotify-mobile-header {
     display: flex !important;
     position: sticky;
@@ -6794,23 +6744,19 @@ body {
     gap: 8px;
   }
 
-  /* Ensure main content doesn't get hidden */
-  .spotify-main-wrapper {
-    margin-left: 0 !important;
-    width: 100%;
-    overflow-x: hidden;
+  [data-theme='light'] .spotify-mobile-header {
+    background-color: #ffffff;
+    border-bottom-color: #e5e7eb;
   }
-}
 
-/* Light theme mobile adjustments */
-[data-theme='light'] .spotify-mobile-header {
-  background-color: #ffffff;
-  border-bottom-color: #e5e7eb;
-}
+  [data-theme='light'] .spotify-sidebar {
+    background-color: #ffffff;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  }
 
-[data-theme='light'] .spotify-sidebar {
-  background-color: #ffffff;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  .spotify-content-header .header-actions {
+    gap: 8px !important;
+  }
 }
 
 /* Mobile profile page */
