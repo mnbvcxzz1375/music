@@ -6808,12 +6808,6 @@ body {
   border-bottom-color: #e5e7eb;
 }
 
-/* Light theme mobile adjustments */
-[data-theme='light'] .spotify-mobile-header {
-  background-color: #ffffff;
-  border-bottom-color: #e5e7eb;
-}
-
 [data-theme='light'] .spotify-sidebar {
   background-color: #ffffff;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
@@ -6868,7 +6862,7 @@ body {
     height: 14px;
   }
 
-  /* Fix profile page mobile spacing */
+  /* Fix profile page mobile padding */
   .user-page.profile-page {
     padding: 16px !important;
   }
@@ -6882,7 +6876,7 @@ body {
     font-size: 20px;
   }
 
-  /* Fix mobile nav items not overflowing */
+  /* Fix mobile nav items */
   .spotify-nav-item {
     padding: 8px 12px;
   }
@@ -6896,6 +6890,7 @@ body {
   }
 }
 
+/* Practice sidebar base styles */
 .practice-sidebar {
   width: 350px;
   background-color: var(--spotify-card-bg, #181818);
