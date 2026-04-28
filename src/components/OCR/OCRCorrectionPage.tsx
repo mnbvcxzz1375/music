@@ -1,6 +1,7 @@
-import { useState, useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Card, CardContent, CardHeader, CardFooter, Input } from '../UI';
+import { AlertTriangle, CheckCircle2, ImageIcon, RotateCcw, Save, ScanLine } from 'lucide-react';
+import { Button, Card, CardContent, CardFooter, CardHeader, Input } from '../UI';
 import ScoreRenderer from '../ScoreRenderer/ScoreRenderer';
 import { useOCRStore } from '@/services/ocr';
 import { DetectedElement, OCRError } from '@/services/ocr/types';
@@ -26,32 +27,26 @@ export function OCRCorrectionPage({ onComplete, onCancel }: OCRCorrectionPagePro
 
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [correctionValue, setCorrectionValue] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewTab, setPreviewTab] = useState<'image' | 'score'>('image');
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      await uploadImage(file);
-      await processImage();
-    }
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    await uploadImage(file);
+    await processImage();
   };
 
   const handleApplyCorrection = () => {
-    if (selectedElement && correctionValue) {
-      applyCorrection({
-        elementId: selectedElement,
-        originalValue: result?.detectedElements.find(e => e.id === selectedElement)?.value || '',
-        correctedValue: correctionValue,
-      });
-      setSelectedElement(null);
-      setCorrectionValue('');
-    }
-  };
-
-  const handleComplete = () => {
-    applyAllCorrections();
+    if (!selectedElement || !correctionValue.trim()) return;
+    applyCorrection({
+      elementId: selectedElement,
+      originalValue: result?.detectedElements.find((element) => element.id === selectedElement)?.value || '',
+      correctedValue: correctionValue.trim(),
+    });
+    setSelectedElement(null);
+    setCorrectionValue('');
   };
 
   const handleSaveToLibrary = async () => {
@@ -65,31 +60,20 @@ export function OCRCorrectionPage({ onComplete, onCancel }: OCRCorrectionPagePro
     return (
       <div className="ocr-page">
         <header className="ocr-header">
-          <h1 className="ocr-title">OCR 乐谱导入</h1>
-          {onCancel && (
-            <Button variant="ghost" onClick={onCancel}>
-              取消
-            </Button>
-          )}
+          <h1 className="ocr-title">谱面扫描</h1>
+          {onCancel && <Button variant="ghost" onClick={onCancel}>取消</Button>}
         </header>
-        
+
         <main className="ocr-content">
           <Card variant="elevated">
             <CardContent>
               <div className="ocr-upload-area">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileSelect}
-                  className="ocr-file-input"
-                />
-                <Button variant="primary" onClick={() => fileInputRef.current?.click()}>
-                  选择乐谱图片
+                <input ref={fileInputRef} type="file" accept="image/*,.pdf" onChange={handleFileSelect} className="ocr-file-input" />
+                <ScanLine size={42} />
+                <Button variant="primary" icon={<ImageIcon size={18} />} onClick={() => fileInputRef.current?.click()}>
+                  选择谱面图片
                 </Button>
-                <p className="ocr-upload-hint">
-                  支持 JPG、PNG、PDF 格式的乐谱图片
-                </p>
+                <p className="ocr-upload-hint">建议使用正对拍摄、完整留白、分辨率较高的图片。系统会先校对再入库。</p>
               </div>
             </CardContent>
           </Card>
@@ -101,18 +85,13 @@ export function OCRCorrectionPage({ onComplete, onCancel }: OCRCorrectionPagePro
   if (status === 'uploading' || status === 'processing') {
     return (
       <div className="ocr-page">
-        <header className="ocr-header">
-          <h1 className="ocr-title">OCR 乐谱导入</h1>
-        </header>
-        
+        <header className="ocr-header"><h1 className="ocr-title">谱面扫描</h1></header>
         <main className="ocr-content">
           <Card variant="elevated">
             <CardContent>
               <div className="ocr-loading">
                 <div className="ocr-spinner" />
-                <p className="ocr-loading-text">
-                  {status === 'uploading' ? '正在上传图片...' : '正在识别乐谱...'}
-                </p>
+                <p className="ocr-loading-text">{status === 'uploading' ? '正在读取图片...' : '正在分析谱面...'}</p>
               </div>
             </CardContent>
           </Card>
@@ -122,70 +101,61 @@ export function OCRCorrectionPage({ onComplete, onCancel }: OCRCorrectionPagePro
   }
 
   if (status === 'reviewing' && result) {
+    const blockingErrors = result.errors.filter((error) => error.type === 'missing' || error.type === 'invalid');
+
     return (
       <div className="ocr-page">
         <header className="ocr-header">
-          <h1 className="ocr-title">OCR 校对</h1>
+          <div>
+            <h1 className="ocr-title">识别校对</h1>
+            <p className="ocr-header-note">先检查原图和谱面预览，再决定保存。低置信度结果不会自动当作完整曲谱。</p>
+          </div>
           <div className="ocr-header-actions">
-            <Button variant="ghost" onClick={reset}>
-              重新上传
-            </Button>
+            <Button variant="ghost" icon={<RotateCcw size={18} />} onClick={reset}>重新上传</Button>
           </div>
         </header>
-        
+
         <main className="ocr-content">
-          {/* Preview Tabs */}
+          {blockingErrors.length > 0 && (
+            <div className="ocr-warning-banner">
+              <AlertTriangle size={18} />
+              <span>当前没有后端 OMR 返回的完整 MusicXML。已完成图片预处理和谱表定位，但音符、节奏和多声部仍需接入 Audiveris/云识谱。</span>
+            </div>
+          )}
+
           <Card variant="outlined">
             <CardHeader
               title="预览"
               action={
                 <div className="ocr-preview-tabs">
-                  <button
-                    className={`ocr-tab-btn ${previewTab === 'image' ? 'active' : ''}`}
-                    onClick={() => setPreviewTab('image')}
-                  >
-                    原始图片
-                  </button>
-                  <button
-                    className={`ocr-tab-btn ${previewTab === 'score' ? 'active' : ''}`}
-                    onClick={() => setPreviewTab('score')}
-                  >
-                    乐谱预览
-                  </button>
+                  <button className={`ocr-tab-btn ${previewTab === 'image' ? 'active' : ''}`} type="button" onClick={() => setPreviewTab('image')}>原图</button>
+                  <button className={`ocr-tab-btn ${previewTab === 'score' ? 'active' : ''}`} type="button" onClick={() => setPreviewTab('score')}>MusicXML 预览</button>
                 </div>
               }
             />
             <CardContent>
-              {previewTab === 'image' && (
+              {previewTab === 'image' ? (
                 <div className="ocr-image-container">
-                  <img
-                    src={result.originalImage}
-                    alt="原始乐谱"
-                    className="ocr-original-image"
-                  />
+                  <img src={result.originalImage} alt="原始乐谱" className="ocr-original-image" />
                 </div>
-              )}
-              {previewTab === 'score' && result.generatedXml && (
+              ) : result.generatedXml ? (
                 <div className="ocr-score-preview">
-                  <ScoreRenderer
-                    xml={result.generatedXml}
-                    className="ocr-score-renderer"
-                  />
+                  <ScoreRenderer xml={result.generatedXml} className="ocr-score-renderer" />
                 </div>
-              )}
-              {previewTab === 'score' && !result.generatedXml && (
-                <p className="ocr-no-score">暂无乐谱预览数据</p>
+              ) : (
+                <p className="ocr-no-score">暂无谱面预览数据。</p>
               )}
             </CardContent>
           </Card>
 
           <div className="ocr-review-grid">
             <Card variant="outlined">
-              <CardHeader title="识别结果" />
+              <CardHeader title="检测结果" subtitle={`整体置信度 ${Math.round(result.confidence * 100)}%`} />
               <CardContent>
                 <div className="ocr-elements-list">
                   {result.detectedElements.map((element) => (
-                    <div 
+                    <button
+                      type="button"
                       key={element.id}
                       className={`ocr-element-item ${getConfidenceClass(element.confidence)} ${selectedElement === element.id ? 'selected' : ''}`}
                       onClick={() => {
@@ -194,89 +164,59 @@ export function OCRCorrectionPage({ onComplete, onCancel }: OCRCorrectionPagePro
                       }}
                     >
                       <span className="ocr-element-type">{getElementLabel(element.type)}</span>
-                      <span className="ocr-element-value">
-                        {element.correctedValue || element.value}
-                      </span>
-                      <span className="ocr-element-confidence">
-                        {Math.round(element.confidence * 100)}%
-                      </span>
-                      {element.corrected && (
-                        <span className="ocr-element-corrected">已修正</span>
-                      )}
-                    </div>
+                      <span className="ocr-element-value">{element.correctedValue || element.value}</span>
+                      <span className="ocr-element-confidence">{Math.round(element.confidence * 100)}%</span>
+                      {element.corrected && <span className="ocr-element-corrected">已修正</span>}
+                    </button>
                   ))}
                 </div>
               </CardContent>
             </Card>
+
+            <Card variant="outlined">
+              <CardHeader title="置信度报告" />
+              <CardContent>
+                <div className="ocr-confidence-report">
+                  <div className="ocr-confidence-item high"><span>高</span><strong>{confidenceReport.high}</strong></div>
+                  <div className="ocr-confidence-item medium"><span>中</span><strong>{confidenceReport.medium}</strong></div>
+                  <div className="ocr-confidence-item low"><span>低</span><strong>{confidenceReport.low}</strong></div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          
-          <Card variant="elevated">
-            <CardHeader title="置信度报告" />
-            <CardContent>
-              <div className="ocr-confidence-report">
-                <div className="ocr-confidence-item high">
-                  <span className="ocr-confidence-label">高置信度</span>
-                  <span className="ocr-confidence-value">{confidenceReport.high}</span>
-                </div>
-                <div className="ocr-confidence-item medium">
-                  <span className="ocr-confidence-label">中等置信度</span>
-                  <span className="ocr-confidence-value">{confidenceReport.medium}</span>
-                </div>
-                <div className="ocr-confidence-item low">
-                  <span className="ocr-confidence-label">低置信度</span>
-                  <span className="ocr-confidence-value">{confidenceReport.low}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
+
           {result.errors.length > 0 && (
-            <Card variant="elevated">
-              <CardHeader title="需要校对的元素" />
+            <Card variant="outlined">
+              <CardHeader title="需要处理的问题" />
               <CardContent>
                 <div className="ocr-errors-list">
                   {result.errors.map((error) => (
                     <div key={error.elementId} className="ocr-error-item">
                       <span className="ocr-error-type">{getErrorLabel(error.type)}</span>
                       <span className="ocr-error-message">{error.message}</span>
-                      {error.suggestion && (
-                        <span className="ocr-error-suggestion">建议: {error.suggestion}</span>
-                      )}
+                      {error.suggestion && <span className="ocr-error-suggestion">建议：{error.suggestion}</span>}
                     </div>
                   ))}
                 </div>
               </CardContent>
             </Card>
           )}
-          
+
           {selectedElement && (
             <Card variant="elevated">
               <CardHeader title="修正元素" />
               <CardContent>
                 <div className="ocr-correction-form">
-                  <Input
-                    label="修正值"
-                    value={correctionValue}
-                    onChange={(e) => setCorrectionValue(e.target.value)}
-                    placeholder="输入正确的值"
-                  />
-                  <Button variant="primary" onClick={handleApplyCorrection}>
-                    应用修正
-                  </Button>
+                  <Input label="修正值" value={correctionValue} onChange={(event) => setCorrectionValue(event.target.value)} placeholder="输入正确值" />
+                  <Button variant="primary" onClick={handleApplyCorrection}>应用修正</Button>
                 </div>
               </CardContent>
             </Card>
           )}
-          
+
           <div className="ocr-actions">
-            <Button variant="secondary" onClick={onCancel || reset}>
-              取消
-            </Button>
-            <Button 
-              variant="primary" 
-              onClick={handleComplete}
-              disabled={result.errors.length > corrections.length}
-            >
+            <Button variant="secondary" onClick={onCancel || reset}>取消</Button>
+            <Button variant="primary" onClick={applyAllCorrections} disabled={result.errors.length > corrections.length && blockingErrors.length === 0}>
               完成校对
             </Button>
           </div>
@@ -288,48 +228,32 @@ export function OCRCorrectionPage({ onComplete, onCancel }: OCRCorrectionPagePro
   if (status === 'completed') {
     return (
       <div className="ocr-page">
-        <header className="ocr-header">
-          <h1 className="ocr-title">OCR 完成</h1>
-        </header>
-        
+        <header className="ocr-header"><h1 className="ocr-title">校对完成</h1></header>
         <main className="ocr-content">
           <Card variant="elevated">
             <CardContent>
               <div className="ocr-success">
-                <span className="ocr-success-icon">✓</span>
-                <p className="ocr-success-text">乐谱已成功识别并校对完成</p>
-                <p className="ocr-success-detail">
-                  共识别 {result?.detectedElements.length} 个元素，
-                  修正 {corrections.length} 个错误
-                </p>
+                <CheckCircle2 size={40} />
+                <p className="ocr-success-text">校对流程已完成</p>
+                <p className="ocr-success-detail">检测 {result?.detectedElements.length ?? 0} 个元素，修正 {corrections.length} 项。</p>
               </div>
             </CardContent>
-            {/* Show Score Preview */}
             {result?.generatedXml && (
               <div className="ocr-score-preview-container">
                 <Card variant="outlined">
-                  <CardHeader title="识别结果预览" />
+                  <CardHeader title="结果预览" />
                   <CardContent>
                     <div className="ocr-score-preview">
-                      <ScoreRenderer
-                        xml={result.generatedXml}
-                        className="ocr-score-renderer"
-                      />
+                      <ScoreRenderer xml={result.generatedXml} className="ocr-score-renderer" />
                     </div>
                   </CardContent>
                 </Card>
               </div>
             )}
             <CardFooter>
-              <Button variant="primary" onClick={() => onComplete?.(result?.generatedXml || '')}>
-                开始练习
-              </Button>
-              <Button variant="secondary" onClick={handleSaveToLibrary}>
-                保存到曲库
-              </Button>
-              <Button variant="ghost" onClick={reset}>
-                导入新乐谱
-              </Button>
+              <Button variant="primary" onClick={() => onComplete?.(result?.generatedXml || '')}>开始练习</Button>
+              <Button variant="secondary" icon={<Save size={18} />} onClick={handleSaveToLibrary}>保存到曲库</Button>
+              <Button variant="ghost" onClick={reset}>导入新乐谱</Button>
             </CardFooter>
           </Card>
         </main>
@@ -339,19 +263,14 @@ export function OCRCorrectionPage({ onComplete, onCancel }: OCRCorrectionPagePro
 
   return (
     <div className="ocr-page">
-      <header className="ocr-header">
-        <h1 className="ocr-title">OCR 错误</h1>
-      </header>
-      
+      <header className="ocr-header"><h1 className="ocr-title">识别失败</h1></header>
       <main className="ocr-content">
         <Card variant="elevated">
           <CardContent>
             <div className="ocr-error-page">
-              <span className="ocr-error-icon">✗</span>
-              <p className="ocr-error-text">OCR 识别失败</p>
-              <Button variant="primary" onClick={reset}>
-                重试
-              </Button>
+              <AlertTriangle size={40} />
+              <p className="ocr-error-text">谱面识别失败，请换一张更清晰、无遮挡的图片。</p>
+              <Button variant="primary" onClick={reset}>重试</Button>
             </div>
           </CardContent>
         </Card>
@@ -373,7 +292,7 @@ function getElementLabel(type: DetectedElement['type']): string {
     clef: '谱号',
     keySignature: '调号',
     timeSignature: '拍号',
-    barline: '小节线',
+    barline: '谱线/小节线',
     text: '文字',
   };
   return labels[type] || type;
@@ -382,8 +301,8 @@ function getElementLabel(type: DetectedElement['type']): string {
 function getErrorLabel(type: OCRError['type']): string {
   const labels = {
     low_confidence: '低置信度',
-    ambiguous: '识别不明确',
-    missing: '缺失元素',
+    ambiguous: '不明确',
+    missing: '能力缺失',
     invalid: '无效识别',
   };
   return labels[type] || type;

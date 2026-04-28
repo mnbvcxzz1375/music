@@ -195,7 +195,7 @@ export function useOSMD({ containerRef, options }: UseOSMDHookParams): UseOSMDRe
       autoResize: true,
       backend: 'svg',
       drawTitle: false,
-      cursorsOptions: [{ type: CursorType.Standard, color: '#2563eb', alpha: 0.35, follow: false }],
+      cursorsOptions: [{ type: CursorType.Standard, color: '#1db954', alpha: 0.34, follow: false }],
     })
 
     osmdRef.current = osmd

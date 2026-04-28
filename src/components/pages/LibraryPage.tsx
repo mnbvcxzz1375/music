@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Music, Clock, Star, Crown } from 'lucide-react';
-import { Button, Card, CardContent, CardHeader, Input, Tabs, TabItem } from '../UI';
-import { usePieceStore } from '@/services/piece';
+import { Clock, FileMusic, Music, ScanLine, Search, Star, Crown } from 'lucide-react';
+import { Button, Input, TabItem, Tabs } from '../UI';
 import { useOCRStore } from '@/services/ocr';
+import { usePieceStore } from '@/services/piece';
 import { useSubscriptionStore } from '@/services/subscription';
-import type { Piece, PieceFilter, InstrumentType, MusicGenre } from '@/services/piece/types';
+import type { InstrumentType, MusicGenre, Piece, PieceFilter } from '@/services/piece/types';
 
 export interface LibraryPageProps {
   onSelectPiece?: (piece: Piece) => void;
@@ -44,7 +44,6 @@ function getDifficultyLabel(difficulty: number): string {
 }
 
 function getDifficultyClass(difficulty: number): string {
-  if (difficulty <= 2) return 'difficulty-beginner';
   if (difficulty <= 4) return 'difficulty-beginner';
   if (difficulty <= 6) return 'difficulty-intermediate';
   return 'difficulty-advanced';
@@ -52,8 +51,9 @@ function getDifficultyClass(difficulty: number): string {
 
 export function LibraryPage({ onSelectPiece }: LibraryPageProps) {
   const navigate = useNavigate();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  
+  const musicXmlInputRef = useRef<HTMLInputElement>(null);
+  const ocrInputRef = useRef<HTMLInputElement>(null);
+
   const {
     pieces,
     favorites,
@@ -93,9 +93,7 @@ export function LibraryPage({ onSelectPiece }: LibraryPageProps) {
       filter.difficultyMax = selectedDifficulty[1];
     }
 
-    if (activeTab === 'favorites') {
-      filter.isOfficial = undefined;
-    } else if (activeTab === 'uploaded') {
+    if (activeTab === 'uploaded') {
       filter.isOfficial = false;
     } else if (activeTab === 'recent') {
       filter.sortBy = 'createdAt';
@@ -105,16 +103,14 @@ export function LibraryPage({ onSelectPiece }: LibraryPageProps) {
     fetchPieces(filter);
   }, [searchQuery, activeTab, selectedInstrument, selectedGenre, selectedDifficulty, sortBy, sortOrder, fetchPieces]);
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file) return;
 
-    const validExtensions = ['.xml', '.musicxml', '.mxl'];
     const fileName = file.name.toLowerCase();
-    const isValid = validExtensions.some(ext => fileName.endsWith(ext));
-
+    const isValid = ['.xml', '.musicxml', '.mxl'].some((ext) => fileName.endsWith(ext));
     if (!isValid) {
-      setUploadError('请上传 MusicXML 格式的文件 (.xml, .musicxml, .mxl)');
+      setUploadError('请上传 MusicXML 文件，支持 .xml、.musicxml、.mxl。');
       return;
     }
 
@@ -125,39 +121,44 @@ export function LibraryPage({ onSelectPiece }: LibraryPageProps) {
       const piece = await uploadPiece(file);
       navigate(`/practice/${piece.id}`);
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : '上传失败');
+      setUploadError(err instanceof Error ? err.message : '上传失败，请稍后重试。');
     } finally {
       setUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      if (musicXmlInputRef.current) musicXmlInputRef.current.value = '';
     }
   };
 
-  const handleOCRUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleOCRUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file) return;
 
+    const isImage = file.type.startsWith('image/');
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    if (!isImage && !isPdf) {
+      setUploadError('谱面 OCR 支持图片或 PDF，请重新选择文件。');
+      return;
+    }
+
+    setUploading(true);
+    setUploadError(null);
+
     try {
-      // Upload directly to OCRStore and process immediately
-      const { uploadImage, processImage, reset } = useOCRStore.getState();
-      await reset();
+      const { reset, uploadImage, processImage } = useOCRStore.getState();
+      reset();
       await uploadImage(file);
       await processImage();
       navigate('/ocr');
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : 'OCR启动失败');
-    }
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      setUploadError(err instanceof Error ? err.message : 'OCR 导入失败，请检查图片清晰度后重试。');
+    } finally {
+      setUploading(false);
+      if (ocrInputRef.current) ocrInputRef.current.value = '';
     }
   };
 
   const handleSelectPiece = (piece: Piece) => {
-    // VIP Check: Prevent opening premium pieces without subscription
     if (piece.isPremium && !isPremium()) {
-      if (window.confirm(`"${piece.title}" 是 VIP 专属曲目。请先升级 VIP 会员以解锁全部内容！`)) {
+      if (window.confirm(`"${piece.title}" 是 VIP 曲目，升级后可解锁完整内容。是否前往会员页？`)) {
         navigate('/subscription');
       }
       return;
@@ -167,12 +168,12 @@ export function LibraryPage({ onSelectPiece }: LibraryPageProps) {
     navigate(`/practice/${piece.id}`);
   };
 
-  const handleToggleFavorite = async (pieceId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleToggleFavorite = async (pieceId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
     await toggleFavorite(pieceId);
   };
 
-  const isFavorite = (pieceId: string) => favorites.some(f => f.pieceId === pieceId);
+  const isFavorite = (pieceId: string) => favorites.some((favorite) => favorite.pieceId === pieceId);
 
   const tabs: TabItem[] = [
     { id: 'all', label: '全部' },
@@ -183,33 +184,34 @@ export function LibraryPage({ onSelectPiece }: LibraryPageProps) {
 
   const instrumentOptions: InstrumentType[] = ['piano', 'guitar', 'violin', 'cello', 'flute', 'other'];
   const genreOptions: MusicGenre[] = ['classical', 'pop', 'jazz', 'folk', 'rock', 'other'];
-
-  const displayedPieces = activeTab === 'favorites'
-    ? pieces.filter(p => isFavorite(p.id))
-    : pieces;
+  const displayedPieces = activeTab === 'favorites' ? pieces.filter((piece) => isFavorite(piece.id)) : pieces;
 
   return (
     <div className="library-page">
       <header className="library-header">
         <div className="library-header-left">
           <h1 className="library-title">曲库</h1>
-          <p className="library-subtitle">
-            {loading ? '加载中...' : `共 ${total} 首曲目`}
-          </p>
+          <p className="library-subtitle">{loading ? '加载中...' : `共 ${total} 首曲目`}</p>
         </div>
         <div className="library-header-right">
           <input
-            ref={fileInputRef}
+            ref={musicXmlInputRef}
             type="file"
             accept=".xml,.musicxml,.mxl"
             onChange={handleFileUpload}
             className="ocr-file-input"
           />
-          <Button
-            variant="primary"
-            loading={uploading}
-            onClick={() => fileInputRef.current?.click()}
-          >
+          <input
+            ref={ocrInputRef}
+            type="file"
+            accept="image/*,.pdf"
+            onChange={handleOCRUpload}
+            className="ocr-file-input"
+          />
+          <Button variant="secondary" loading={uploading} icon={<ScanLine size={18} />} onClick={() => ocrInputRef.current?.click()}>
+            扫描谱面
+          </Button>
+          <Button variant="primary" loading={uploading} icon={<FileMusic size={18} />} onClick={() => musicXmlInputRef.current?.click()}>
             上传曲目
           </Button>
         </div>
@@ -217,239 +219,112 @@ export function LibraryPage({ onSelectPiece }: LibraryPageProps) {
 
       {uploadError && (
         <div className="library-upload-error">
-          {uploadError}
-          <Button variant="ghost" size="small" onClick={() => setUploadError(null)}>
-            关闭
-          </Button>
+          <span>{uploadError}</span>
+          <Button variant="ghost" size="small" onClick={() => setUploadError(null)}>关闭</Button>
         </div>
       )}
 
-      {error && (
-        <div className="library-error">
-          {error}
-        </div>
-      )}
+      {error && <div className="library-error">{error}</div>}
 
       <main className="library-content">
+        <section className="library-ocr-panel">
+          <div>
+            <h2>从照片导入乐谱</h2>
+            <p>适合手机拍摄或扫描件。导入后先进入校对页，确认识别结果再保存到曲库。</p>
+          </div>
+          <Button variant="primary" icon={<ScanLine size={18} />} loading={uploading} onClick={() => ocrInputRef.current?.click()}>
+            选择图片 / PDF
+          </Button>
+        </section>
+
         <div className="library-toolbar">
           <Input
             placeholder="搜索曲目或作曲家..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(event) => setSearchQuery(event.target.value)}
             leftIcon={<Search size={18} />}
           />
 
-          <Tabs
-            items={tabs}
-            activeId={activeTab}
-            onChange={setActiveTab}
-            variant="pills"
-          />
+          <Tabs items={tabs} activeId={activeTab} onChange={setActiveTab} variant="pills" />
 
           <div className="library-filters">
-            <div className="filter-group">
-              <span className="filter-label">乐器:</span>
-              <Button
-                variant={selectedInstrument === null ? 'primary' : 'secondary'}
-                size="small"
-                onClick={() => setSelectedInstrument(null)}
-              >
-                全部
-              </Button>
-              {instrumentOptions.map(inst => (
-                <Button
-                  key={inst}
-                  variant={selectedInstrument === inst ? 'primary' : 'secondary'}
-                  size="small"
-                  onClick={() => setSelectedInstrument(inst)}
-                >
-                  {instrumentLabels[inst]}
+            <FilterGroup label="乐器">
+              <Button variant={selectedInstrument === null ? 'primary' : 'secondary'} size="small" onClick={() => setSelectedInstrument(null)}>全部</Button>
+              {instrumentOptions.map((instrument) => (
+                <Button key={instrument} variant={selectedInstrument === instrument ? 'primary' : 'secondary'} size="small" onClick={() => setSelectedInstrument(instrument)}>
+                  {instrumentLabels[instrument]}
                 </Button>
               ))}
-            </div>
+            </FilterGroup>
 
-            <div className="filter-group">
-              <span className="filter-label">风格:</span>
-              <Button
-                variant={selectedGenre === null ? 'primary' : 'secondary'}
-                size="small"
-                onClick={() => setSelectedGenre(null)}
-              >
-                全部
-              </Button>
-              {genreOptions.map(genre => (
-                <Button
-                  key={genre}
-                  variant={selectedGenre === genre ? 'primary' : 'secondary'}
-                  size="small"
-                  onClick={() => setSelectedGenre(genre)}
-                >
+            <FilterGroup label="风格">
+              <Button variant={selectedGenre === null ? 'primary' : 'secondary'} size="small" onClick={() => setSelectedGenre(null)}>全部</Button>
+              {genreOptions.map((genre) => (
+                <Button key={genre} variant={selectedGenre === genre ? 'primary' : 'secondary'} size="small" onClick={() => setSelectedGenre(genre)}>
                   {genreLabels[genre]}
                 </Button>
               ))}
-            </div>
+            </FilterGroup>
 
-            <div className="filter-group">
-              <span className="filter-label">难度:</span>
-              <Button
-                variant={selectedDifficulty === null ? 'primary' : 'secondary'}
-                size="small"
-                onClick={() => setSelectedDifficulty(null)}
-              >
-                全部
-              </Button>
-              <Button
-                variant={selectedDifficulty?.[1] === 2 ? 'primary' : 'secondary'}
-                size="small"
-                onClick={() => setSelectedDifficulty([1, 2])}
-              >
-                入门
-              </Button>
-              <Button
-                variant={selectedDifficulty?.[0] === 3 && selectedDifficulty?.[1] === 4 ? 'primary' : 'secondary'}
-                size="small"
-                onClick={() => setSelectedDifficulty([3, 4])}
-              >
-                初级
-              </Button>
-              <Button
-                variant={selectedDifficulty?.[0] === 5 && selectedDifficulty?.[1] === 6 ? 'primary' : 'secondary'}
-                size="small"
-                onClick={() => setSelectedDifficulty([5, 6])}
-              >
-                中级
-              </Button>
-              <Button
-                variant={selectedDifficulty?.[0] === 7 ? 'primary' : 'secondary'}
-                size="small"
-                onClick={() => setSelectedDifficulty([7, 10])}
-              >
-                高级
-              </Button>
-            </div>
+            <FilterGroup label="难度">
+              <Button variant={selectedDifficulty === null ? 'primary' : 'secondary'} size="small" onClick={() => setSelectedDifficulty(null)}>全部</Button>
+              <Button variant={selectedDifficulty?.[1] === 2 ? 'primary' : 'secondary'} size="small" onClick={() => setSelectedDifficulty([1, 2])}>入门</Button>
+              <Button variant={selectedDifficulty?.[0] === 3 && selectedDifficulty?.[1] === 4 ? 'primary' : 'secondary'} size="small" onClick={() => setSelectedDifficulty([3, 4])}>初级</Button>
+              <Button variant={selectedDifficulty?.[0] === 5 && selectedDifficulty?.[1] === 6 ? 'primary' : 'secondary'} size="small" onClick={() => setSelectedDifficulty([5, 6])}>中级</Button>
+              <Button variant={selectedDifficulty?.[0] === 7 ? 'primary' : 'secondary'} size="small" onClick={() => setSelectedDifficulty([7, 10])}>高级</Button>
+            </FilterGroup>
 
-            <div className="filter-group">
-              <span className="filter-label">排序:</span>
-              <Button
-                variant={sortBy === 'createdAt' ? 'primary' : 'secondary'}
-                size="small"
-                onClick={() => { setSortBy('createdAt'); setSortOrder('desc'); }}
-              >
-                最新
-              </Button>
-              <Button
-                variant={sortBy === 'playCount' ? 'primary' : 'secondary'}
-                size="small"
-                onClick={() => { setSortBy('playCount'); setSortOrder('desc'); }}
-              >
-                热门
-              </Button>
-              <Button
-                variant={sortBy === 'title' ? 'primary' : 'secondary'}
-                size="small"
-                onClick={() => { setSortBy('title'); setSortOrder('asc'); }}
-              >
-                名称
-              </Button>
-              <Button
-                variant={sortBy === 'difficulty' ? 'primary' : 'secondary'}
-                size="small"
-                onClick={() => { setSortBy('difficulty'); setSortOrder('asc'); }}
-              >
-                难度
-              </Button>
-            </div>
+            <FilterGroup label="排序">
+              <Button variant={sortBy === 'createdAt' ? 'primary' : 'secondary'} size="small" onClick={() => { setSortBy('createdAt'); setSortOrder('desc'); }}>最新</Button>
+              <Button variant={sortBy === 'playCount' ? 'primary' : 'secondary'} size="small" onClick={() => { setSortBy('playCount'); setSortOrder('desc'); }}>热门</Button>
+              <Button variant={sortBy === 'title' ? 'primary' : 'secondary'} size="small" onClick={() => { setSortBy('title'); setSortOrder('asc'); }}>名称</Button>
+              <Button variant={sortBy === 'difficulty' ? 'primary' : 'secondary'} size="small" onClick={() => { setSortBy('difficulty'); setSortOrder('asc'); }}>难度</Button>
+            </FilterGroup>
           </div>
         </div>
 
-        <div className="library-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '24px' }}>
+        <div className="library-grid">
           {displayedPieces.map((piece) => (
-            <div 
-              key={piece.id} 
-              className="hostinger-card"
-              onClick={() => handleSelectPiece(piece)}
-            >
-              <div className="hostinger-card-cover">
-                <Music size={48} />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div style={{ minWidth: 0, paddingRight: '8px' }}>
+            <article key={piece.id} className="hostinger-card" onClick={() => handleSelectPiece(piece)}>
+              <div className="hostinger-card-cover"><Music size={48} /></div>
+              <div className="piece-card-main">
+                <div className="piece-card-copy">
                   <h3 className="hostinger-card-title" title={piece.title}>{piece.title}</h3>
                   <p className="hostinger-card-subtitle" title={piece.composer || '未知作曲家'}>{piece.composer || '未知作曲家'}</p>
                 </div>
-                <button
-                  onClick={(e) => handleToggleFavorite(piece.id, e)}
-                  style={{ background: 'transparent', border: 'none', color: isFavorite(piece.id) ? 'var(--color-accent-default)' : 'var(--spotify-text-secondary)', cursor: 'pointer', padding: '4px' }}
-                >
+                <button className="piece-favorite-btn" type="button" aria-label="收藏曲目" onClick={(event) => handleToggleFavorite(piece.id, event)}>
                   <Star fill={isFavorite(piece.id) ? 'currentColor' : 'none'} size={18} />
                 </button>
               </div>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '8px' }}>
-                <span className="piece-info-item" style={{ fontSize: '12px', color: 'var(--spotify-text-secondary)', margin: 0 }}>
-                  <Clock size={12} style={{ marginRight: '4px' }} />
-                  {formatDuration(piece.durationSeconds)}
+
+              <div className="piece-card-meta">
+                <span className="piece-info-item"><Clock size={12} />{formatDuration(piece.durationSeconds)}</span>
+                <span className="piece-badges">
+                  {piece.isPremium && <span className="premium-badge premium-badge-small"><Crown size={12} /></span>}
+                  <span className={getDifficultyClass(piece.difficulty)}>{getDifficultyLabel(piece.difficulty)}</span>
                 </span>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  {piece.isPremium && (
-                    <span className="premium-badge premium-badge-small" style={{ display: 'flex', alignItems: 'center' }}>
-                      <Crown size={12} />
-                    </span>
-                  )}
-                  <span className={getDifficultyClass(piece.difficulty)} style={{ fontSize: '12px', padding: '2px 6px', borderRadius: '4px', background: 'rgba(255,255,255,0.1)' }}>
-                    {getDifficultyLabel(piece.difficulty)}
-                  </span>
-                </div>
               </div>
-            </div>
+            </article>
           ))}
         </div>
 
         {displayedPieces.length === 0 && !loading && (
           <div className="library-empty">
-            <p>
-              {activeTab === 'favorites'
-                ? '暂无收藏曲目'
-                : activeTab === 'uploaded'
-                  ? '暂无上传曲目'
-                  : '没有找到匹配的曲目'}
-            </p>
-            {searchQuery && (
-              <Button variant="secondary" onClick={() => setSearchQuery('')}>
-                清除搜索
-              </Button>
-            )}
-            {activeTab !== 'all' && (
-              <Button variant="secondary" onClick={() => setActiveTab('all')}>
-                查看全部
-              </Button>
-            )}
+            <p>{activeTab === 'favorites' ? '暂无收藏曲目' : activeTab === 'uploaded' ? '暂无上传曲目' : '没有找到匹配的曲目'}</p>
+            {searchQuery && <Button variant="secondary" onClick={() => setSearchQuery('')}>清除搜索</Button>}
+            {activeTab !== 'all' && <Button variant="secondary" onClick={() => setActiveTab('all')}>查看全部</Button>}
           </div>
         )}
-
-        <div className="library-ocr-section">
-          <Card variant="outlined">
-            <CardHeader title="OCR 乐谱导入" subtitle="扫描纸质乐谱" />
-            <CardContent>
-              <div className="ocr-upload-area">
-                <input
-                  type="file"
-                  accept="image/*,.pdf"
-                  onChange={handleOCRUpload}
-                  className="ocr-file-input"
-                  id="ocr-image-upload"
-                />
-                <Button variant="secondary" onClick={() => document.getElementById('ocr-image-upload')?.click()}>
-                  选择乐谱图片
-                </Button>
-                <p className="ocr-upload-hint">
-                  支持 JPG、PNG、PDF 格式的乐谱图片
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </main>
+    </div>
+  );
+}
+
+function FilterGroup({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="filter-group">
+      <span className="filter-label">{label}</span>
+      <div className="filter-options">{children}</div>
     </div>
   );
 }

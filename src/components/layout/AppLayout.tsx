@@ -1,6 +1,6 @@
-import { ReactNode, useState, useEffect } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Music, BookOpen, BarChart, User, Crown, LogOut, Menu, X } from 'lucide-react';
+import { BarChart, BookOpen, Crown, Home, LogOut, Menu, Music, User, X } from 'lucide-react';
 import { ThemeToggle } from '../Theme';
 import { useI18n } from '@/i18n';
 import { useAuthStore } from '@/services/auth';
@@ -14,35 +14,33 @@ export function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
   const { t } = useI18n();
   const navigate = useNavigate();
-  
-  // Auth & Subscription state
   const { isAuthenticated, logout } = useAuthStore();
   const { isPremium } = useSubscriptionStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Close mobile menu on resize
   useEffect(() => {
+    if (!isMobileMenuOpen) return;
     const handleResize = () => {
-      if (window.innerWidth >= 768) setIsMobileMenuOpen(false);
+      if (window.innerWidth >= 900) setIsMobileMenuOpen(false);
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [isMobileMenuOpen]);
 
-  // Check if we are on login/register page (only for NOT authenticated users)
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
+
   const isAuthPage = location.pathname === '/user' && !isAuthenticated;
 
   if (isAuthPage) {
     return (
       <div className="app-layout auth-layout">
-        <main className="app-main">
-          {children}
-        </main>
+        <main className="app-main auth-main">{children}</main>
       </div>
     );
   }
 
-  // Navigation Items
   const navItems = [
     { id: 'home', label: t.nav.home, href: '/', icon: <Home size={20} /> },
     { id: 'library', label: t.nav.library, href: '/library', icon: <BookOpen size={20} /> },
@@ -56,26 +54,23 @@ export function AppLayout({ children }: AppLayoutProps) {
   };
 
   const isActive = (path: string) => {
-    if (path === '/' && location.pathname === '/') return true;
-    if (location.pathname.startsWith(path)) return true;
-    return false;
+    if (path === '/') return location.pathname === '/';
+    return location.pathname.startsWith(path);
   };
 
-  const SidebarContent = () => (
+  const sidebarContent = (
     <div className="spotify-sidebar-inner">
-      {/* Sidebar Header / Logo */}
       <div className="spotify-sidebar-header">
         <Link to="/" className="spotify-brand">
-          <span className="brand-icon">🎵</span>
+          <span className="brand-icon">♪</span>
           <span className="brand-text">Resonance</span>
         </Link>
       </div>
 
-      {/* Navigation Links */}
-      <nav className="spotify-nav">
+      <nav className="spotify-nav" aria-label="主导航">
         {navItems.map((item) => (
-          <Link 
-            key={item.id} 
+          <Link
+            key={item.id}
             to={item.href}
             className={`spotify-nav-item ${isActive(item.href) ? 'active' : ''}`}
           >
@@ -85,10 +80,9 @@ export function AppLayout({ children }: AppLayoutProps) {
         ))}
       </nav>
 
-      {/* Sidebar Footer */}
       <div className="spotify-sidebar-footer">
         {!isAuthenticated ? (
-          <Link to="/user" className="spotify-nav-item" style={{ color: '#1ed760', fontWeight: 'bold' }}>
+          <Link to="/user" className="spotify-nav-item nav-auth-entry">
             <span className="nav-icon"><User size={20} /></span>
             <span className="nav-label">登录 / 注册</span>
           </Link>
@@ -102,9 +96,9 @@ export function AppLayout({ children }: AppLayoutProps) {
               <span className="nav-icon"><User size={20} /></span>
               <span className="nav-label">个人中心</span>
             </Link>
-            <button className="spotify-nav-item logout-btn" onClick={handleLogout}>
+            <button type="button" className="spotify-nav-item logout-btn" onClick={handleLogout}>
               <span className="nav-icon"><LogOut size={20} /></span>
-              <span className="nav-label">登出</span>
+              <span className="nav-label">退出登录</span>
             </button>
           </>
         )}
@@ -114,43 +108,50 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <div className="spotify-layout">
-      {/* Mobile Header */}
       <div className="spotify-mobile-header">
-        <button className="menu-toggle" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} style={{ background: 'transparent', border: 'none', color: 'var(--spotify-text-primary)' }}>
-          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        <button
+          type="button"
+          className="menu-toggle"
+          onClick={() => setIsMobileMenuOpen((open) => !open)}
+          aria-label={isMobileMenuOpen ? '关闭菜单' : '打开菜单'}
+        >
+          {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
-        <Link to="/" className="spotify-brand" style={{ fontSize: '18px' }}>Resonance</Link>
+        <Link to="/" className="spotify-brand compact-brand">Resonance</Link>
         <ThemeToggle />
       </div>
 
-      {/* Sidebar (Desktop + Mobile Drawer) */}
       <aside className={`spotify-sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
-        <SidebarContent />
+        {sidebarContent}
       </aside>
-      
-      {/* Main Content Area */}
+      {isMobileMenuOpen && (
+        <button
+          type="button"
+          className="sidebar-scrim"
+          aria-label="关闭菜单"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       <div className="spotify-main-wrapper">
-        {/* Sticky Header inside content */}
         <header className="spotify-content-header">
-          <div className="header-actions" style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <div className="header-actions">
             <ThemeToggle />
-            <Link to="/user" className="header-user-profile" style={{ background: 'var(--spotify-card-bg)', borderRadius: '50%', width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--spotify-text-primary)', flexShrink: 0 }}>
+            <Link to="/user" className="header-user-profile" aria-label="个人中心">
               <span className="user-avatar"><User size={18} /></span>
+              <span className="header-user-label">个人中心</span>
             </Link>
           </div>
         </header>
 
-        <main className="app-main" onClick={() => isMobileMenuOpen && setIsMobileMenuOpen(false)} style={{ flex: 1, padding: '32px' }}>
-          <div className="content-inner">
-            {children}
-          </div>
+        <main className="app-main" onClick={() => isMobileMenuOpen && setIsMobileMenuOpen(false)}>
+          <div className="content-inner">{children}</div>
         </main>
       </div>
     </div>
   );
 }
 
-// PageLayout for inner pages with a title
 export interface PageLayoutProps {
   title: string;
   subtitle?: string;
@@ -166,9 +167,7 @@ export function PageLayout({ title, subtitle, children }: PageLayoutProps) {
           {subtitle && <p className="page-subtitle">{subtitle}</p>}
         </div>
       </header>
-      <div className="page-content">
-        {children}
-      </div>
+      <div className="page-content">{children}</div>
     </div>
   );
 }

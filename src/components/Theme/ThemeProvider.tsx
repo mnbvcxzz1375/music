@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { Sun, Moon, RotateCw } from 'lucide-react';
-import { useThemeStore, initTheme } from './ThemeStore';
+import { Moon, RotateCw, Sun } from 'lucide-react';
+import { initTheme, useThemeStore } from './ThemeStore';
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const { theme, resolvedTheme } = useThemeStore();
@@ -10,18 +10,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const resolved = theme === 'auto' 
+    const resolved = theme === 'auto'
       ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
       : theme;
-    
+
     document.documentElement.setAttribute('data-theme', resolved);
   }, [theme]);
 
-  return (
-    <div className={`theme-provider theme-${resolvedTheme}`}>
-      {children}
-    </div>
-  );
+  return <div className={`theme-provider theme-${resolvedTheme}`}>{children}</div>;
 }
 
 export function ThemeToggle() {
@@ -30,19 +26,21 @@ export function ThemeToggle() {
   const themes: Array<{ value: import('./ThemeStore').Theme; label: string; icon: React.ReactNode }> = [
     { value: 'light', label: '浅色', icon: <Sun size={16} /> },
     { value: 'dark', label: '深色', icon: <Moon size={16} /> },
-    { value: 'auto', label: '自动', icon: <RotateCw size={16} /> },
+    { value: 'auto', label: '跟随系统', icon: <RotateCw size={16} /> },
   ];
 
   return (
-    <div className="theme-toggle">
-      {themes.map((t) => (
+    <div className="theme-toggle" aria-label="主题切换">
+      {themes.map((item) => (
         <button
-          key={t.value}
-          className={`theme-toggle-btn ${theme === t.value ? 'active' : ''}`}
-          onClick={() => setTheme(t.value)}
-          title={t.label}
+          key={item.value}
+          className={`theme-toggle-btn ${theme === item.value ? 'active' : ''}`}
+          onClick={() => setTheme(item.value)}
+          title={item.label}
+          aria-label={item.label}
+          type="button"
         >
-          <span className="theme-toggle-icon">{t.icon}</span>
+          <span className="theme-toggle-icon">{item.icon}</span>
         </button>
       ))}
     </div>

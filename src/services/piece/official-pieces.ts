@@ -1,262 +1,40 @@
-import type { Piece, MusicGenre, InstrumentType } from '@/services/piece/types';
+import type { InstrumentType, MusicGenre, Piece } from '@/services/piece/types';
+
+const createdAt = new Date('2026-01-01');
 
 export const OFFICIAL_PIECES: Piece[] = [
-  {
-    id: 'official-001',
-    title: '小星星',
-    composer: '传统民歌',
-    difficulty: 1,
-    instrumentTypes: ['piano'],
-    genres: ['classical'],
-    durationSeconds: 60,
-    musicXmlUrl: '/pieces/little-star.xml',
-    tags: ['入门', '儿童', '经典'],
-    isOfficial: true,
-    isPremium: false,
-    playCount: 10000,
-    favoriteCount: 5000,
-    createdAt: new Date('2026-01-01'),
-    updatedAt: new Date('2026-01-01'),
-  },
-  {
-    id: 'official-002',
-    title: '欢乐颂',
-    composer: '贝多芬',
-    difficulty: 2,
-    instrumentTypes: ['piano'],
-    genres: ['classical'],
-    durationSeconds: 90,
-    musicXmlUrl: '/pieces/ode-to-joy.xml',
-    tags: ['入门', '古典', '经典'],
-    isOfficial: true,
-    isPremium: false,
-    playCount: 8000,
-    favoriteCount: 4000,
-    createdAt: new Date('2026-01-01'),
-    updatedAt: new Date('2026-01-01'),
-  },
-  {
-    id: 'official-003',
-    title: '卡农',
-    composer: '帕赫贝尔',
-    difficulty: 3,
-    instrumentTypes: ['piano'],
-    genres: ['classical'],
-    durationSeconds: 180,
-    musicXmlUrl: '/pieces/canon.xml',
-    tags: ['初级', '古典', '经典'],
-    isOfficial: true,
-    isPremium: false,
-    playCount: 15000,
-    favoriteCount: 8000,
-    createdAt: new Date('2026-01-01'),
-    updatedAt: new Date('2026-01-01'),
-  },
-  {
-    id: 'official-004',
-    title: '月光奏鸣曲',
-    composer: '贝多芬',
-    difficulty: 5,
-    instrumentTypes: ['piano'],
-    genres: ['classical'],
-    durationSeconds: 300,
-    musicXmlUrl: '/pieces/moonlight-sonata.xml',
-    tags: ['中级', '古典', '经典'],
-    isOfficial: true,
-    isPremium: true,
-    playCount: 12000,
-    favoriteCount: 6000,
-    createdAt: new Date('2026-01-01'),
-    updatedAt: new Date('2026-01-01'),
-  },
-  {
-    id: 'official-005',
-    title: '致爱丽丝',
-    composer: '贝多芬',
-    difficulty: 3,
-    instrumentTypes: ['piano'],
-    genres: ['classical'],
-    durationSeconds: 180,
-    musicXmlUrl: '/pieces/fur-elise.xml',
-    tags: ['初级', '古典', '经典'],
-    isOfficial: true,
-    isPremium: false,
-    playCount: 20000,
-    favoriteCount: 10000,
-    createdAt: new Date('2026-01-01'),
-    updatedAt: new Date('2026-01-01'),
-  },
-  {
-    id: 'official-006',
-    title: '土耳其进行曲',
-    composer: '莫扎特',
-    difficulty: 4,
-    instrumentTypes: ['piano'],
-    genres: ['classical'],
-    durationSeconds: 200,
-    musicXmlUrl: '/pieces/turkish-march.xml',
-    tags: ['初级', '古典', '经典'],
-    isOfficial: true,
-    isPremium: false,
-    playCount: 9000,
-    favoriteCount: 4500,
-    createdAt: new Date('2026-01-01'),
-    updatedAt: new Date('2026-01-01'),
-  },
-  {
-    id: 'official-007',
-    title: '梦中的婚礼',
-    composer: '理查德·克莱德曼',
-    difficulty: 4,
-    instrumentTypes: ['piano'],
-    genres: ['pop'],
-    durationSeconds: 240,
-    musicXmlUrl: '/pieces/mariage-d-amour.xml',
-    tags: ['初级', '流行', '浪漫'],
-    isOfficial: true,
-    isPremium: true,
-    playCount: 11000,
-    favoriteCount: 5500,
-    createdAt: new Date('2026-01-01'),
-    updatedAt: new Date('2026-01-01'),
-  },
-  {
-    id: 'official-008',
-    title: '天空之城',
-    composer: '久石让',
-    difficulty: 3,
-    instrumentTypes: ['piano'],
-    genres: ['pop'],
-    durationSeconds: 180,
-    musicXmlUrl: '/pieces/castle-in-the-sky.xml',
-    tags: ['初级', '流行', '动漫'],
-    isOfficial: true,
-    isPremium: false,
-    playCount: 18000,
-    favoriteCount: 9000,
-    createdAt: new Date('2026-01-01'),
-    updatedAt: new Date('2026-01-01'),
-  },
-  {
-    id: 'official-009',
-    title: '小提琴协奏曲',
-    composer: '巴赫',
-    difficulty: 7,
-    instrumentTypes: ['violin'],
-    genres: ['classical'],
-    durationSeconds: 600,
-    musicXmlUrl: '/pieces/bach-violin-concerto.xml',
-    tags: ['高级', '古典', '协奏曲'],
-    isOfficial: true,
-    isPremium: true,
-    playCount: 3000,
-    favoriteCount: 1500,
-    createdAt: new Date('2026-01-01'),
-    updatedAt: new Date('2026-01-01'),
-  },
-  {
-    id: 'official-010',
-    title: '吉他入门练习曲',
-    composer: '传统',
-    difficulty: 1,
-    instrumentTypes: ['guitar'],
-    genres: ['folk'],
-    durationSeconds: 60,
-    musicXmlUrl: '/pieces/guitar-basics.xml',
-    tags: ['入门', '民谣', '基础'],
-    isOfficial: true,
-    isPremium: false,
-    playCount: 5000,
-    favoriteCount: 2500,
-    createdAt: new Date('2026-01-01'),
-    updatedAt: new Date('2026-01-01'),
-  },
-  {
-    id: 'official-011',
-    title: '爱的罗曼史',
-    composer: '传统',
-    difficulty: 3,
-    instrumentTypes: ['guitar'],
-    genres: ['folk'],
-    durationSeconds: 180,
-    musicXmlUrl: '/pieces/romance-de-amor.xml',
-    tags: ['初级', '民谣', '浪漫'],
-    isOfficial: true,
-    isPremium: false,
-    playCount: 7000,
-    favoriteCount: 3500,
-    createdAt: new Date('2026-01-01'),
-    updatedAt: new Date('2026-01-01'),
-  },
-  {
-    id: 'official-012',
-    title: 'Canon in D (吉他版)',
-    composer: '帕赫贝尔',
-    difficulty: 5,
-    instrumentTypes: ['guitar'],
-    genres: ['classical'],
-    durationSeconds: 240,
-    musicXmlUrl: '/pieces/canon-guitar.xml',
-    tags: ['中级', '古典', '经典'],
-    isOfficial: true,
-    isPremium: true,
-    playCount: 4000,
-    favoriteCount: 2000,
-    createdAt: new Date('2026-01-01'),
-    updatedAt: new Date('2026-01-01'),
-  },
-  {
-    id: 'official-013',
-    title: 'River Flows in You',
-    composer: '李闰珉',
-    difficulty: 4,
-    instrumentTypes: ['piano'],
-    genres: ['pop'],
-    durationSeconds: 200,
-    musicXmlUrl: '/pieces/river-flows-in-you.xml',
-    tags: ['初级', '流行', '浪漫'],
-    isOfficial: true,
-    isPremium: true,
-    playCount: 25000,
-    favoriteCount: 12000,
-    createdAt: new Date('2026-01-01'),
-    updatedAt: new Date('2026-01-01'),
-  },
-  {
-    id: 'official-014',
-    title: 'Kiss the Rain',
-    composer: '李闰珉',
-    difficulty: 4,
-    instrumentTypes: ['piano'],
-    genres: ['pop'],
-    durationSeconds: 220,
-    musicXmlUrl: '/pieces/kiss-the-rain.xml',
-    tags: ['初级', '流行', '浪漫'],
-    isOfficial: true,
-    isPremium: true,
-    playCount: 22000,
-    favoriteCount: 11000,
-    createdAt: new Date('2026-01-01'),
-    updatedAt: new Date('2026-01-01'),
-  },
-  {
-    id: 'official-015',
-    title: '巴赫大提琴独奏曲',
-    composer: '巴赫',
-    difficulty: 6,
-    instrumentTypes: ['cello'],
-    genres: ['classical'],
-    durationSeconds: 480,
-    musicXmlUrl: '/pieces/bach-cello-solo.xml',
-    tags: ['中级', '古典', '独奏'],
-    isOfficial: true,
-    isPremium: true,
-    playCount: 2000,
-    favoriteCount: 1000,
-    createdAt: new Date('2026-01-01'),
-    updatedAt: new Date('2026-01-01'),
-  },
-];
+  ['official-001', '小星星', '传统民歌', 1, ['piano'], ['classical'], 60, '/pieces/little-star.xml', ['入门', '儿童', '经典'], false, 10000, 5000],
+  ['official-002', '欢乐颂', '贝多芬', 2, ['piano'], ['classical'], 90, '/pieces/ode-to-joy.xml', ['入门', '古典', '经典'], false, 8000, 4000],
+  ['official-003', '卡农', '帕赫贝尔', 3, ['piano'], ['classical'], 180, '/pieces/canon.xml', ['初级', '古典', '经典'], false, 15000, 8000],
+  ['official-004', '月光奏鸣曲', '贝多芬', 5, ['piano'], ['classical'], 300, '/pieces/moonlight-sonata.xml', ['中级', '古典', '经典'], true, 12000, 6000],
+  ['official-005', '致爱丽丝', '贝多芬', 3, ['piano'], ['classical'], 180, '/pieces/fur-elise.xml', ['初级', '古典', '经典'], false, 20000, 10000],
+  ['official-006', '土耳其进行曲', '莫扎特', 4, ['piano'], ['classical'], 200, '/pieces/turkish-march.xml', ['初级', '古典', '经典'], false, 9000, 4500],
+  ['official-007', '梦中的婚礼', '理查德·克莱德曼', 4, ['piano'], ['pop'], 240, '/pieces/mariage-d-amour.xml', ['初级', '流行', '浪漫'], true, 11000, 5500],
+  ['official-008', '天空之城', '久石让', 3, ['piano'], ['pop'], 180, '/pieces/castle-in-the-sky.xml', ['初级', '流行', '动漫'], false, 18000, 9000],
+  ['official-009', '小提琴协奏曲', '巴赫', 7, ['violin'], ['classical'], 600, '/pieces/bach-violin-concerto.xml', ['高级', '古典', '协奏曲'], true, 3000, 1500],
+  ['official-010', '吉他入门练习曲', '传统', 1, ['guitar'], ['folk'], 60, '/pieces/guitar-basics.xml', ['入门', '民谣', '基础'], false, 5000, 2500],
+  ['official-011', '爱的罗曼史', '传统', 3, ['guitar'], ['folk'], 180, '/pieces/romance-de-amor.xml', ['初级', '民谣', '浪漫'], false, 7000, 3500],
+  ['official-012', 'Canon in D (吉他版)', '帕赫贝尔', 5, ['guitar'], ['classical'], 240, '/pieces/canon-guitar.xml', ['中级', '古典', '经典'], true, 4000, 2000],
+  ['official-013', 'River Flows in You', '李闰珉', 4, ['piano'], ['pop'], 200, '/pieces/river-flows-in-you.xml', ['初级', '流行', '浪漫'], true, 25000, 12000],
+  ['official-014', 'Kiss the Rain', '李闰珉', 4, ['piano'], ['pop'], 220, '/pieces/kiss-the-rain.xml', ['初级', '流行', '浪漫'], true, 22000, 11000],
+  ['official-015', '巴赫大提琴独奏曲', '巴赫', 6, ['cello'], ['classical'], 480, '/pieces/bach-cello-solo.xml', ['中级', '古典', '独奏'], true, 2000, 1000],
+].map(([id, title, composer, difficulty, instrumentTypes, genres, durationSeconds, musicXmlUrl, tags, isPremium, playCount, favoriteCount]) => ({
+  id: id as string,
+  title: title as string,
+  composer: composer as string,
+  difficulty: difficulty as number,
+  instrumentTypes: instrumentTypes as InstrumentType[],
+  genres: genres as MusicGenre[],
+  durationSeconds: durationSeconds as number,
+  musicXmlUrl: musicXmlUrl as string,
+  tags: tags as string[],
+  isOfficial: true,
+  isPremium: isPremium as boolean,
+  playCount: playCount as number,
+  favoriteCount: favoriteCount as number,
+  createdAt,
+  updatedAt: createdAt,
+}));
 
 export const DIFFICULTY_LEVELS = [
   { min: 1, max: 2, label: '入门', description: '适合零基础学习者' },
@@ -282,30 +60,30 @@ export const INSTRUMENT_CATEGORIES = [
 ];
 
 export function getOfficialPiecesByDifficulty(min: number, max: number): Piece[] {
-  return OFFICIAL_PIECES.filter(p => p.difficulty >= min && p.difficulty <= max);
+  return OFFICIAL_PIECES.filter((piece) => piece.difficulty >= min && piece.difficulty <= max);
 }
 
 export function getOfficialPiecesByGenre(genre: MusicGenre): Piece[] {
-  return OFFICIAL_PIECES.filter(p => p.genres.includes(genre));
+  return OFFICIAL_PIECES.filter((piece) => piece.genres.includes(genre));
 }
 
 export function getOfficialPiecesByInstrument(instrument: InstrumentType): Piece[] {
-  return OFFICIAL_PIECES.filter(p => p.instrumentTypes.includes(instrument));
+  return OFFICIAL_PIECES.filter((piece) => piece.instrumentTypes.includes(instrument));
 }
 
 export function getPremiumPieces(): Piece[] {
-  return OFFICIAL_PIECES.filter(p => p.isPremium);
+  return OFFICIAL_PIECES.filter((piece) => piece.isPremium);
 }
 
 export function getFreePieces(): Piece[] {
-  return OFFICIAL_PIECES.filter(p => !p.isPremium);
+  return OFFICIAL_PIECES.filter((piece) => !piece.isPremium);
 }
 
 export function searchOfficialPieces(query: string): Piece[] {
   const lowerQuery = query.toLowerCase();
-  return OFFICIAL_PIECES.filter(p => 
-    p.title.toLowerCase().includes(lowerQuery) ||
-    (p.composer && p.composer.toLowerCase().includes(lowerQuery)) ||
-    p.tags.some(t => t.toLowerCase().includes(lowerQuery))
+  return OFFICIAL_PIECES.filter((piece) =>
+    piece.title.toLowerCase().includes(lowerQuery) ||
+    (piece.composer && piece.composer.toLowerCase().includes(lowerQuery)) ||
+    piece.tags.some((tag) => tag.toLowerCase().includes(lowerQuery))
   );
 }

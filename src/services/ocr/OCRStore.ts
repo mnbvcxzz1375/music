@@ -1,35 +1,28 @@
 import { create } from 'zustand';
 import type { Piece } from '@/services/piece/types';
 import { usePieceStore } from '@/services/piece';
-import {
-  OCRStatus,
-  OCRResult,
-  DetectedElement,
-  OCRError,
-  OCRConfig,
-  OCRCorrection,
-} from './types';
+import { DetectedElement, OCRConfig, OCRError, OCRCorrection, OCRResult, OCRStatus } from './types';
 
 interface OCRState {
   status: OCRStatus;
   result: OCRResult | null;
   corrections: OCRCorrection[];
   config: OCRConfig;
-  
+
   uploadImage: (file: File) => Promise<void>;
   processImage: () => Promise<void>;
   applyCorrection: (correction: OCRCorrection) => void;
   applyAllCorrections: () => void;
   reset: () => void;
-  
+
   getConfidenceReport: () => { high: number; medium: number; low: number };
   getErrorsByType: () => Record<OCRError['type'], number>;
-  
+
   exportXml: () => string | null;
   saveToLibrary: () => Promise<void>;
 }
 
-const generateId = () => `ocr-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+const generateId = () => `ocr-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
 const defaultConfig: OCRConfig = {
   provider: 'audiveris',
@@ -41,287 +34,321 @@ const defaultConfig: OCRConfig = {
   outputFormat: 'MusicXML',
 };
 
-export const useOCRStore = create<OCRState>()(
-  (set, get) => ({
-    status: 'idle',
-    result: null,
-    corrections: [],
-    config: defaultConfig,
+type BackendOCRResponse = {
+  generatedXml?: string;
+  confidence?: number;
+  detectedElements?: DetectedElement[];
+  errors?: OCRError[];
+};
 
-    uploadImage: async (file) => {
-      set({ status: 'uploading' });
-      
-      try {
-        const reader = new FileReader();
-        const imageData = await new Promise<string>((resolve, reject) => {
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-        
-        const mockResult: OCRResult = {
+type LocalAnalysis = {
+  elements: DetectedElement[];
+  errors: OCRError[];
+  confidence: number;
+  measures: number;
+};
+
+async function readFileAsDataUrl(file: File): Promise<string> {
+  const reader = new FileReader();
+  return new Promise((resolve, reject) => {
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('文件读取失败'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function tryBackendOCR(file: File): Promise<BackendOCRResponse | null> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const response = await fetch('/api/v1/ocr', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) return null;
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) return null;
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
+
+function loadImage(dataUrl: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error('图片无法解析，请换用清晰的 JPG/PNG/WEBP。'));
+    image.src = dataUrl;
+  });
+}
+
+async function analyzeStaffLayout(dataUrl: string): Promise<LocalAnalysis> {
+  const image = await loadImage(dataUrl);
+  const maxWidth = 1400;
+  const scale = Math.min(1, maxWidth / image.naturalWidth);
+  const width = Math.max(1, Math.round(image.naturalWidth * scale));
+  const height = Math.max(1, Math.round(image.naturalHeight * scale));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+  if (!context) throw new Error('浏览器不支持图片预处理。');
+
+  context.fillStyle = '#ffffff';
+  context.fillRect(0, 0, width, height);
+  context.drawImage(image, 0, 0, width, height);
+
+  const imageData = context.getImageData(0, 0, width, height);
+  const rowInk: number[] = new Array(height).fill(0);
+
+  for (let y = 0; y < height; y += 1) {
+    let darkPixels = 0;
+    for (let x = 0; x < width; x += 1) {
+      const index = (y * width + x) * 4;
+      const gray = imageData.data[index] * 0.299 + imageData.data[index + 1] * 0.587 + imageData.data[index + 2] * 0.114;
+      if (gray < 120) darkPixels += 1;
+    }
+    rowInk[y] = darkPixels / width;
+  }
+
+  const lineRows = rowInk
+    .map((ratio, y) => ({ ratio, y }))
+    .filter(({ ratio }) => ratio > 0.16);
+
+  const clusters: Array<{ y: number; height: number; strength: number }> = [];
+  for (const row of lineRows) {
+    const last = clusters[clusters.length - 1];
+    if (last && row.y - (last.y + last.height) <= 2) {
+      const totalStrength = last.strength + row.ratio;
+      last.y = Math.round((last.y * last.strength + row.y * row.ratio) / totalStrength);
+      last.height += 1;
+      last.strength = totalStrength;
+    } else {
+      clusters.push({ y: row.y, height: 1, strength: row.ratio });
+    }
+  }
+
+  const staffLines = clusters.filter((cluster) => cluster.height <= 5);
+  const systems = Math.max(1, Math.round(staffLines.length / 5));
+  const measures = Math.max(1, systems * 4);
+  const elements: DetectedElement[] = staffLines.map((line, index) => ({
+    id: `staff-${index + 1}`,
+    type: 'barline',
+    position: { x: 0, y: Math.round(line.y / scale), width: image.naturalWidth, height: Math.max(1, Math.round(line.height / scale)) },
+    value: `谱线 ${index + 1}`,
+    confidence: 0.82,
+  }));
+
+  const confidence = staffLines.length >= 10 ? 0.58 : 0.35;
+  const errors: OCRError[] = [
+    {
+      elementId: 'omr-backend',
+      type: 'missing',
+      message: '当前未连接真正的 OMR 识谱服务，前端只能完成图片预处理和谱表定位，不能可靠识别音高、节奏与多声部。',
+      suggestion: '部署 Audiveris 或云端 OMR 接口后，系统会优先使用后端返回的 MusicXML。',
+    },
+  ];
+
+  if (staffLines.length < 10) {
+    errors.push({
+      elementId: 'staff-lines',
+      type: 'low_confidence',
+      message: '谱线定位较少，图片可能过暗、过斜或裁切不完整。',
+      suggestion: '请使用正对拍摄、背景干净、分辨率更高的图片。',
+    });
+  }
+
+  return { elements, errors, confidence, measures };
+}
+
+function generateReviewXml(measures: number, title: string): string {
+  const measureXml = Array.from({ length: measures }, (_, index) => `
+    <measure number="${index + 1}">
+      ${index === 0 ? `
+      <attributes>
+        <divisions>1</divisions>
+        <key><fifths>0</fifths></key>
+        <time><beats>4</beats><beat-type>4</beat-type></time>
+        <clef><sign>G</sign><line>2</line></clef>
+      </attributes>` : ''}
+      <note>
+        <rest />
+        <duration>4</duration>
+        <type>whole</type>
+      </note>
+    </measure>`).join('');
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+  <work><work-title>${title}</work-title></work>
+  <identification><creator type="composer">OCR 校对草稿</creator><encoding><software>Resonance OCR</software></encoding></identification>
+  <part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>
+  <part id="P1">${measureXml}
+  </part>
+</score-partwise>`;
+}
+
+export const useOCRStore = create<OCRState>()((set, get) => ({
+  status: 'idle',
+  result: null,
+  corrections: [],
+  config: defaultConfig,
+
+  uploadImage: async (file) => {
+    set({ status: 'uploading' });
+
+    try {
+      const imageData = await readFileAsDataUrl(file);
+      set({
+        result: {
           id: generateId(),
           originalImage: imageData,
           generatedXml: '',
-          confidence: 0.75,
+          confidence: 0,
           detectedElements: [],
           errors: [],
           timestamp: new Date(),
-        };
-        
-        set({ result: mockResult, status: 'processing' });
-      } catch (error) {
-        set({ status: 'error' });
-      }
-    },
+        },
+        status: 'processing',
+      });
+    } catch {
+      set({ status: 'error' });
+      throw new Error('文件读取失败，请重新选择谱面图片。');
+    }
+  },
 
-    processImage: async () => {
-      const currentResult = get().result;
-      if (!currentResult) return;
-      
-      set({ status: 'processing' });
-      
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Extract file name from original image for context
-      const fileName = currentResult.originalImage.split('/').pop()?.split('.')[0] || 'Unknown';
-      
-      const mockElements: DetectedElement[] = [
-        { id: 'e1', type: 'clef', position: { x: 50, y: 100, width: 30, height: 40 }, value: 'Treble Clef', confidence: 0.95 },
-        { id: 'e2', type: 'keySignature', position: { x: 100, y: 100, width: 60, height: 40 }, value: 'C major', confidence: 0.88 },
-        { id: 'e3', type: 'timeSignature', position: { x: 180, y: 100, width: 40, height: 40 }, value: '4/4', confidence: 0.92 },
-        { id: 'e4', type: 'note', position: { x: 250, y: 120, width: 20, height: 30 }, value: 'C4', confidence: 0.78 },
-        { id: 'e5', type: 'note', position: { x: 300, y: 110, width: 20, height: 30 }, value: 'E4', confidence: 0.65 },
-        { id: 'e6', type: 'note', position: { x: 350, y: 100, width: 20, height: 30 }, value: 'G4', confidence: 0.45 },
-      ];
-      
-      const mockErrors: OCRError[] = [
-        { elementId: 'e5', type: 'low_confidence', message: '音符识别置信度较低', suggestion: '请确认是否为E4' },
-        { elementId: 'e6', type: 'ambiguous', message: '音符识别不明确', suggestion: '可能是G4或A4' },
-      ];
-      
-      // Generate MusicXML that matches the detected elements
-      const mockXml = `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
-<score-partwise version="3.1">
-  <work>
-    <work-title>${fileName}</work-title>
-  </work>
-  <identification>
-    <creator type="composer">OCR Import</creator>
-    <encoding>
-      <software>Resonance OCR</software>
-    </encoding>
-  </identification>
-  <part-list>
-    <score-part id="P1">
-      <part-name>Piano</part-name>
-      <part-abbreviation>Pno.</part-abbreviation>
-    </score-part>
-  </part-list>
-  <part id="P1">
-    <measure number="1">
-      <attributes>
-        <divisions>1</divisions>
-        <key>
-          <fifths>0</fifths>
-        </key>
-        <time>
-          <beats>4</beats>
-          <beat-type>4</beat-type>
-        </time>
-        <clef>
-          <sign>G</sign>
-          <line>2</line>
-        </clef>
-      </attributes>
-      <note>
-        <pitch>
-          <step>C</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>1</duration>
-        <type>quarter</type>
-      </note>
-      <note>
-        <pitch>
-          <step>E</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>1</duration>
-        <type>quarter</type>
-      </note>
-      <note>
-        <pitch>
-          <step>G</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>1</duration>
-        <type>quarter</type>
-      </note>
-      <note>
-        <pitch>
-          <step>C</step>
-          <octave>5</octave>
-        </pitch>
-        <duration>1</duration>
-        <type>quarter</type>
-      </note>
-    </measure>
-    <measure number="2">
-      <note>
-        <pitch>
-          <step>C</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>1</duration>
-        <type>quarter</type>
-      </note>
-      <note>
-        <pitch>
-          <step>D</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>1</duration>
-        <type>quarter</type>
-      </note>
-      <note>
-        <pitch>
-          <step>E</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>1</duration>
-        <type>quarter</type>
-      </note>
-      <note>
-        <pitch>
-          <step>F</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>1</duration>
-        <type>quarter</type>
-      </note>
-    </measure>
-    <measure number="3">
-      <note>
-        <pitch>
-          <step>G</step>
-          <octave>4</octave>
-        </pitch>
-        <duration>2</duration>
-        <type>half</type>
-      </note>
-      <note>
-        <rest>
-          <duration>2</duration>
-        </rest>
-        <type>half</type>
-      </note>
-    </measure>
-  </part>
-</score-partwise>`;
-      
+  processImage: async () => {
+    const currentResult = get().result;
+    if (!currentResult) return;
+
+    set({ status: 'processing' });
+
+    const file = await fetch(currentResult.originalImage)
+      .then((response) => response.blob())
+      .then((blob) => new File([blob], 'score-image', { type: blob.type }));
+
+    const backend = await tryBackendOCR(file);
+    if (backend?.generatedXml) {
       set({
         result: {
           ...currentResult,
-          detectedElements: mockElements,
-          errors: mockErrors,
-          generatedXml: mockXml,
-          confidence: 0.75,
+          generatedXml: backend.generatedXml,
+          confidence: backend.confidence ?? 0.8,
+          detectedElements: backend.detectedElements ?? [],
+          errors: backend.errors ?? [],
         },
         status: 'reviewing',
       });
-    },
+      return;
+    }
 
-    applyCorrection: (correction) => {
-      const result = get().result;
-      if (!result) return;
-      
-      const updatedElements = result.detectedElements.map(el => 
-        el.id === correction.elementId
-          ? { ...el, corrected: true, correctedValue: correction.correctedValue }
-          : el
-      );
-      
-      set((state) => ({
-        corrections: [...state.corrections, correction],
-        result: result ? { ...result, detectedElements: updatedElements } : null,
-      }));
-    },
+    try {
+      const analysis = await analyzeStaffLayout(currentResult.originalImage);
+      set({
+        result: {
+          ...currentResult,
+          detectedElements: analysis.elements,
+          errors: analysis.errors,
+          generatedXml: generateReviewXml(analysis.measures, 'OCR 校对草稿'),
+          confidence: analysis.confidence,
+        },
+        status: 'reviewing',
+      });
+    } catch (error) {
+      set({ status: 'error' });
+      throw error;
+    }
+  },
 
-    applyAllCorrections: () => {
-      set({ status: 'completed' });
-    },
+  applyCorrection: (correction) => {
+    const result = get().result;
+    if (!result) return;
 
-    reset: () => {
-      set({ status: 'idle', result: null, corrections: [] });
-    },
+    const updatedElements = result.detectedElements.map((element) =>
+      element.id === correction.elementId
+        ? { ...element, corrected: true, correctedValue: correction.correctedValue }
+        : element
+    );
 
-    getConfidenceReport: () => {
-      const result = get().result;
-      if (!result) return { high: 0, medium: 0, low: 0 };
-      
-      const elements = result.detectedElements;
-      return {
-        high: elements.filter(e => e.confidence >= 0.8).length,
-        medium: elements.filter(e => e.confidence >= 0.5 && e.confidence < 0.8).length,
-        low: elements.filter(e => e.confidence < 0.5).length,
-      };
-    },
+    set((state) => ({
+      corrections: [...state.corrections, correction],
+      result: { ...result, detectedElements: updatedElements },
+    }));
+  },
 
-    getErrorsByType: () => {
-      const result = get().result;
-      if (!result) return { low_confidence: 0, ambiguous: 0, missing: 0, invalid: 0 };
-      
-      const errors = result.errors;
-      return {
-        low_confidence: errors.filter(e => e.type === 'low_confidence').length,
-        ambiguous: errors.filter(e => e.type === 'ambiguous').length,
-        missing: errors.filter(e => e.type === 'missing').length,
-        invalid: errors.filter(e => e.type === 'invalid').length,
-      };
-    },
+  applyAllCorrections: () => {
+    set({ status: 'completed' });
+  },
 
-    exportXml: () => {
-      const result = get().result;
-      if (!result || get().status !== 'completed') return null;
-      return result.generatedXml;
-    },
+  reset: () => {
+    set({ status: 'idle', result: null, corrections: [] });
+  },
 
-    saveToLibrary: async () => {
-      const result = get().result;
-      const xml = get().exportXml();
-      if (!result || !xml) return;
+  getConfidenceReport: () => {
+    const result = get().result;
+    if (!result) return { high: 0, medium: 0, low: 0 };
 
-      // Create a blob URL for the musicXml so PracticePage can fetch it
-      const blob = new Blob([xml], { type: 'application/xml' });
-      const blobUrl = URL.createObjectURL(blob);
+    return {
+      high: result.detectedElements.filter((element) => element.confidence >= 0.8).length,
+      medium: result.detectedElements.filter((element) => element.confidence >= 0.5 && element.confidence < 0.8).length,
+      low: result.detectedElements.filter((element) => element.confidence < 0.5).length,
+    };
+  },
 
-      // Create a local Piece from OCR result and add to piece store
-      const newPiece: Piece = {
-        id: `ocr-${Date.now()}`,
-        title: `OCR识别 (${new Date().toLocaleDateString()})`,
-        composer: 'OCR 导入',
-        difficulty: 3,
-        instrumentTypes: ['piano'],
-        genres: ['classical'],
-        durationSeconds: 120,
-        musicXmlUrl: blobUrl,
-        tags: ['ocr'],
-        isPremium: false,
-        isOfficial: false,
-        playCount: 0,
-        favoriteCount: 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+  getErrorsByType: () => {
+    const result = get().result;
+    const errors = result?.errors ?? [];
+    return {
+      low_confidence: errors.filter((error) => error.type === 'low_confidence').length,
+      ambiguous: errors.filter((error) => error.type === 'ambiguous').length,
+      missing: errors.filter((error) => error.type === 'missing').length,
+      invalid: errors.filter((error) => error.type === 'invalid').length,
+    };
+  },
 
-      usePieceStore.setState((state) => ({
-        pieces: [newPiece, ...state.pieces],
-      }));
-    },
-  })
-);
+  exportXml: () => {
+    const result = get().result;
+    if (!result || get().status !== 'completed') return null;
+    return result.generatedXml;
+  },
+
+  saveToLibrary: async () => {
+    const result = get().result;
+    const xml = get().exportXml();
+    if (!result || !xml) return;
+
+    const blob = new Blob([xml], { type: 'application/xml' });
+    const blobUrl = URL.createObjectURL(blob);
+
+    const newPiece: Piece = {
+      id: `ocr-${Date.now()}`,
+      title: `OCR 导入 (${new Date().toLocaleDateString()})`,
+      composer: result.confidence >= 0.8 ? 'OMR 识别' : 'OCR 校对草稿',
+      difficulty: 3,
+      instrumentTypes: ['piano'],
+      genres: ['classical'],
+      durationSeconds: 120,
+      musicXmlUrl: blobUrl,
+      tags: ['ocr'],
+      isPremium: false,
+      isOfficial: false,
+      playCount: 0,
+      favoriteCount: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    usePieceStore.setState((state) => ({
+      pieces: [newPiece, ...state.pieces],
+      total: state.total + 1,
+    }));
+  },
+}));
 
 export function getOCRStore() {
   return useOCRStore.getState();

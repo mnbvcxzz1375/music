@@ -30,6 +30,8 @@ export function PracticePage({ xmlContent, onComplete }: PracticePageProps) {
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [showCalibration, setShowCalibration] = useState(false);
+  const [showCalibrationPrompt, setShowCalibrationPrompt] = useState(false);
+  const [skipAutoCalibrationPrompt, setSkipAutoCalibrationPrompt] = useState(false);
   const [score, setScore] = useState<Score | null>(null);
   const [selectedPartId, setSelectedPartId] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'controls' | 'parts' | 'stats'>('controls');
@@ -148,10 +150,26 @@ export function PracticePage({ xmlContent, onComplete }: PracticePageProps) {
     }
 
     const calibManager = new CalibrationManager();
-    if (calibManager.needsCalibration()) {
-      setShowCalibration(true);
+    const promptDisabled = localStorage.getItem('resonance:disable-auto-calibration-prompt') === 'true';
+    if (calibManager.needsCalibration() && !promptDisabled) {
+      setShowCalibrationPrompt(true);
     }
   }, [xmlContent, pieceId, defaultXml]);
+
+  const dismissCalibrationPrompt = () => {
+    if (skipAutoCalibrationPrompt) {
+      localStorage.setItem('resonance:disable-auto-calibration-prompt', 'true');
+    }
+    setShowCalibrationPrompt(false);
+  };
+
+  const startCalibrationFromPrompt = () => {
+    if (skipAutoCalibrationPrompt) {
+      localStorage.setItem('resonance:disable-auto-calibration-prompt', 'true');
+    }
+    setShowCalibrationPrompt(false);
+    setShowCalibration(true);
+  };
 
   const recordPracticeSession = useCallback(() => {
     if (!practiceStartTime) return;
@@ -296,10 +314,14 @@ export function PracticePage({ xmlContent, onComplete }: PracticePageProps) {
               ← 返回曲库
             </Button>
           )}
+          <div className="practice-topbar-title">
+            <span>练习工作台</span>
+            <strong>{pieceTitle}</strong>
+          </div>
         </div>
         <div className="practice-topbar-right">
           <Button variant="ghost" onClick={() => setShowCalibration(true)} size="small">
-            🎙 校准
+            校准
           </Button>
         </div>
       </header>
@@ -311,7 +333,7 @@ export function PracticePage({ xmlContent, onComplete }: PracticePageProps) {
               <ScoreRenderer
                 ref={scoreRef}
                 xml={xmlContent || fetchedXml || defaultXml}
-                highlightColor="#1ed760"
+                highlightColor="#1db954"
               />
             </div>
           </div>
@@ -443,7 +465,38 @@ export function PracticePage({ xmlContent, onComplete }: PracticePageProps) {
           onCancel={() => setShowCalibration(false)}
         />
       )}
+
+      {showCalibrationPrompt && !showCalibration && (
+        <div className="calibration-overlay">
+          <div className="calibration-prompt-modal" role="dialog" aria-modal="true" aria-labelledby="calibration-prompt-title">
+            <div className="calibration-prompt-icon">校</div>
+            <div className="calibration-prompt-copy">
+              <h2 id="calibration-prompt-title">是否现在校准麦克风？</h2>
+              <p>
+                校准可以改善音准检测，但不是每次练习都必须执行。环境噪声或输入音量变化时，也可以稍后点击右上角“校准”手动调整。
+              </p>
+            </div>
+
+            <label className="calibration-prompt-checkbox">
+              <input
+                type="checkbox"
+                checked={skipAutoCalibrationPrompt}
+                onChange={(event) => setSkipAutoCalibrationPrompt(event.target.checked)}
+              />
+              <span>以后不再自动提示</span>
+            </label>
+
+            <div className="calibration-prompt-actions">
+              <button type="button" className="button-base button-secondary button-medium" onClick={dismissCalibrationPrompt}>
+                暂不校准
+              </button>
+              <button type="button" className="button-base button-primary button-medium" onClick={startCalibrationFromPrompt}>
+                开始校准
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
