@@ -29,8 +29,8 @@ export function AppLayout({ children }: AppLayoutProps) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Check if we are on login/register page
-  const isAuthPage = location.pathname === '/user' || location.pathname.startsWith('/user?');
+  // Check if we are on login/register page (only for NOT authenticated users)
+  const isAuthPage = location.pathname === '/user' && !isAuthenticated;
 
   if (isAuthPage) {
     return (

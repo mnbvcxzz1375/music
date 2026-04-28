@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Settings, BarChart, Crown } from 'lucide-react';
+import { Settings, BarChart, Crown, ArrowLeft } from 'lucide-react';
 import { Button, Input, Tabs } from '../UI';
 import { useAuthStore } from '@/services/auth';
 import { useI18n } from '@/i18n';
@@ -22,6 +22,11 @@ export function UserPage({ onSuccess: _onSuccess }: UserPageProps) {
   if (isAuthenticated && user) {
     return (
       <div className="user-page profile-page">
+        {/* Back Button */}
+        <button className="profile-back-btn" onClick={() => navigate(-1)}>
+          <ArrowLeft size={18} /> 返回
+        </button>
+
         <div className="profile-header">
           <div className="avatar-circle">{user.nickname?.[0] || 'U'}</div>
           <div className="user-info">
@@ -39,7 +44,7 @@ export function UserPage({ onSuccess: _onSuccess }: UserPageProps) {
         </div>
 
         <div className="profile-actions-grid">
-          <Link to="/subscription">
+          <Link to="/subscription" className="action-card-link">
             <div className="action-card">
               <div className="icon-box gold">
                 <Crown size={24} />
@@ -51,7 +56,7 @@ export function UserPage({ onSuccess: _onSuccess }: UserPageProps) {
             </div>
           </Link>
           
-          <Link to="/statistics">
+          <Link to="/statistics" className="action-card-link">
             <div className="action-card">
               <div className="icon-box green">
                 <BarChart size={24} />
@@ -63,7 +68,7 @@ export function UserPage({ onSuccess: _onSuccess }: UserPageProps) {
             </div>
           </Link>
 
-          <Link to="/user/settings">
+          <Link to="/user/settings" className="action-card-link">
             <div className="action-card">
               <div className="icon-box">
                 <Settings size={24} />
