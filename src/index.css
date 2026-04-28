@@ -7221,4 +7221,56 @@ html, body, #root {
   color: #111827;
 }
 
-[data-theme='1
+[data-theme='light'] .profile-back-btn:hover {
+  background: #f3f4f6;
+}
+
+[data-theme='light'] .action-card {
+  background-color: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+[data-theme='light'] .action-card:hover {
+  background-color: #f9fafb !important;
+}
+
+[data-theme='light'] .action-card .text-group h3 {
+  color: #111827 !important;
+}
+
+[data-theme='light'] .action-card .text-group p {
+  color: #6b7280 !important;
+}
+
+[data-theme='light'] .avatar-circle {
+  background: #f3f4f6 !important;
+  color: #111827 !important;
+  border-color: #e5e7eb !important;
+}
+
+[data-theme='light'] .icon-box {
+  background-color: #f3f4f6 !important;
+}
+
+[data-theme='light'] .icon-box.gold {
+  background-color: rgba(212, 175, 55, 0.1) !important;
+}
+
+[data-theme='light'] .icon-box.green {
+  background-color: rgba(46, 139, 87, 0.1) !important;
+}
+
+[data-theme='light'] .premium-badge-large {
+  background: rgba(212, 175, 55, 0.1) !important;
+  color: #92700c !important;
+}
+
+[data-theme='light'] .logout-btn {
+  border-color: #dc2626 !important;
+  color: #dc2626 !important;
+  background: transparent !important;
+}
+
+[data-theme='light'] .profile-actions-grid {
+  gap: 16px;
+}
