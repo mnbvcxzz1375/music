@@ -6462,9 +6462,438 @@ body {
 
 .practice-score-wrapper .score-container {
   width: 100%;
-  background: #ffffff;
+  background: #f9fafb !important;
   border-radius: 8px;
   padding: 16px;
+  border: 1px solid #4b5563;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Always force light background on score container so OSMD black notes are visible */
+[data-theme='dark'] .practice-score-wrapper .score-container {
+  background: #f9fafb !important;
+  border-color: #4b5563;
+}
+
+/* Light theme adjustments for practice page */
+[data-theme='light'] .practice-score-wrapper .score-container {
+  background: #ffffff !important;
+  border-color: #e5e7eb;
+}
+
+[data-theme='light'] .practice-layout {
+  background-color: var(--spotify-main-bg);
+}
+
+[data-theme='light'] .practice-main {
+  background-color: var(--spotify-main-bg);
+}
+
+[data-theme='light'] .practice-topbar {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-bottom-color: #e5e7eb;
+}
+
+[data-theme='light'] .practice-hero {
+  background-color: var(--spotify-card-bg);
+}
+
+[data-theme='light'] .practice-sidebar {
+  background-color: var(--spotify-card-bg);
+}
+
+/* Force OSMD SVG elements to render properly on dark mode backgrounds */
+[data-theme='dark'] .score-container,
+[data-theme='dark'] .score-container * {
+  color: #111827 !important;
+  fill: #111827 !important;
+  stroke: #111827 !important;
+}
+[data-theme='dark'] .score-container {
+  background: #f9fafb !important;
+  border: 1px solid #4b5563;
+}
+
+[data-theme='dark'] .practice-layout {
+  background-color: var(--spotify-main-bg);
+}
+
+[data-theme='dark'] .practice-main {
+  background-color: var(--spotify-main-bg);
+}
+
+[data-theme='dark'] .practice-topbar {
+  background-color: rgba(0, 0, 0, 0.5);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .practice-hero {
+  background-color: var(--spotify-card-bg);
+}
+
+[data-theme='dark'] .practice-sidebar {
+  background-color: var(--spotify-card-bg);
+}
+
+/* Mobile responsive fixes */
+@media (max-width: 768px) {
+  .practice-layout {
+    height: auto;
+    overflow-y: auto;
+  }
+
+  .practice-main {
+    flex-direction: column;
+    padding: 12px;
+    overflow: visible;
+    height: auto;
+  }
+
+  .practice-hero {
+    min-height: 300px;
+    order: 1;
+  }
+
+  .practice-sidebar {
+    width: 100%;
+    order: 2;
+    padding: 16px;
+  }
+
+  .practice-tabs {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .practice-tab-btn {
+    flex: 1;
+    min-width: 80px;
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  /* Fix sidebar for mobile - slide-out drawer */
+  .spotify-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 240px;
+    z-index: 1000;
+    background-color: #000000;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.5);
+  }
+
+  .spotify-sidebar.open {
+    transform: translateX(0);
+  }
+
+  /* Fix mobile header */
+  .spotify-mobile-header {
+    display: flex !important;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    padding: 12px 16px;
+    background-color: #000000;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    gap: 8px;
+  }
+
+  /* Ensure main content doesn't get hidden */
+  .spotify-main-wrapper {
+    margin-left: 0 !important;
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Fix theme toggle on mobile */
+  .theme-toggle {
+    gap: 2px;
+    padding: 2px;
+  }
+
+  .theme-toggle-btn {
+    padding: 4px 6px;
+  }
+
+  .theme-toggle-btn .theme-toggle-icon svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* Fix header user icon on mobile */
+  .header-user-profile {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+  }
+}
+
+/* Light theme mobile adjustments */
+[data-theme='light'] .spotify-mobile-header {
+  background-color: #ffffff;
+  border-bottom-color: #e5e7eb;
+}
+
+[data-theme='light'] .spotify-sidebar {
+  background-color: #ffffff;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile profile page spacing */
+@media (max-width: 768px) {
+  .profile-back-btn {
+    margin-bottom: 12px;
+  }
+
+  .profile-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px 0;
+  }
+
+  .avatar-circle {
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+  }
+
+  .profile-actions-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .action-card {
+    padding: 16px;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .icon-box {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+  }
+
+  /* Fix profile page mobile padding */
+  .user-page.profile-page {
+    padding: 16px !important;
+  }
+
+  /* Fix sidebar brand text on mobile */
+  .spotify-brand {
+    font-size: 16px;
+  }
+
+  .brand-icon {
+    font-size: 20px;
+  }
+
+  /* Fix mobile nav items */
+  .spotify-nav-item {
+    padding: 8px 12px;
+  }
+
+  .nav-icon {
+    min-width: 20px;
+  }
+
+  .nav-label {
+    font-size: 13px;
+  }
+
+  /* Fix mobile content header actions */
+  .spotify-content-header {
+    padding: 0 12px !important;
+    height: 56px;
+  }
+
+  .spotify-content-header .header-actions {
+    gap: 8px !important;
+  }
+}
+
+  .practice-main {
+    flex-direction: column;
+    padding: 12px;
+    overflow: visible;
+    height: auto;
+  }
+
+  .practice-hero {
+    min-height: 300px;
+    order: 1;
+  }
+
+  .practice-sidebar {
+    width: 100%;
+    order: 2;
+    padding: 16px;
+  }
+
+  .practice-tabs {
+    flex-wrap: wrap;
+  }
+
+  .practice-tab-btn {
+    flex: 1;
+    min-width: 80px;
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  /* Fix sidebar width on mobile */
+  .spotify-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 240px;
+    z-index: 1000;
+    background-color: #000000;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.5);
+  }
+
+  .spotify-sidebar.open {
+    transform: translateX(0);
+  }
+
+  /* Overlay to close sidebar */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+  }
+
+  .sidebar-overlay.open {
+    display: block;
+  }
+
+  /* Fix mobile header */
+  .spotify-mobile-header {
+    display: flex !important;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    padding: 12px 16px;
+    background-color: #000000;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    gap: 8px;
+  }
+
+  /* Ensure main content doesn't get hidden */
+  .spotify-main-wrapper {
+    margin-left: 0 !important;
+    width: 100%;
+    overflow-x: hidden;
+  }
+}
+
+/* Light theme mobile adjustments */
+[data-theme='light'] .spotify-mobile-header {
+  background-color: #ffffff;
+  border-bottom-color: #e5e7eb;
+}
+
+/* Light theme mobile adjustments */
+[data-theme='light'] .spotify-mobile-header {
+  background-color: #ffffff;
+  border-bottom-color: #e5e7eb;
+}
+
+[data-theme='light'] .spotify-sidebar {
+  background-color: #ffffff;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile profile page */
+@media (max-width: 768px) {
+  .profile-back-btn {
+    margin-bottom: 12px;
+  }
+
+  .profile-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px 0;
+  }
+
+  .avatar-circle {
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+  }
+
+  .profile-actions-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .action-card {
+    padding: 16px;
+  }
+
+  .icon-box {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+  }
+
+  /* Fix theme toggle on mobile */
+  .theme-toggle {
+    gap: 2px;
+    padding: 2px;
+  }
+
+  .theme-toggle-btn {
+    padding: 4px 6px;
+  }
+
+  .theme-toggle-btn .theme-toggle-icon svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* Fix profile page mobile spacing */
+  .user-page.profile-page {
+    padding: 16px !important;
+  }
+
+  /* Fix sidebar brand text on mobile */
+  .spotify-brand {
+    font-size: 16px;
+  }
+
+  .brand-icon {
+    font-size: 20px;
+  }
+
+  /* Fix mobile nav items not overflowing */
+  .spotify-nav-item {
+    padding: 8px 12px;
+  }
+
+  .nav-icon {
+    min-width: 20px;
+  }
+
+  .nav-label {
+    font-size: 13px;
+  }
 }
 
 .practice-sidebar {
