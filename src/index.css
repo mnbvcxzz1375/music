@@ -6940,23 +6940,93 @@ html, body, #root {
 }
 
 /* ===== FIX 1: Profile Page - Back Button & Card Styling ===== */
+/* Override .user-page centering for profile page */
+.user-page.profile-page {
+  display: block !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  max-width: none !important;
+  width: 100% !important;
+}
+
 .profile-back-btn {
-  display: inline-flex;
+  display: inline-flex !important;
   align-items: center;
   gap: 6px;
-  padding: 8px 16px;
-  margin-bottom: 24px;
-  background: var(--spotify-card-bg);
+  padding: 6px 12px;
+  margin-bottom: 16px;
+  background: transparent;
   border: 1px solid var(--spotify-border, rgba(255,255,255,0.1));
-  border-radius: 8px;
-  color: var(--spotify-text-primary);
-  font-size: 14px;
+  border-radius: 6px;
+  color: var(--spotify-text-secondary);
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .profile-back-btn:hover {
   background: var(--spotify-card-hover);
+  color: var(--spotify-text-primary);
+}
+
+[data-theme='light'] .profile-back-btn {
+  border-color: transparent;
+  color: #6b7280;
+}
+
+[data-theme='light'] .profile-back-btn:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 0 0 24px 0;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.profile-back-btn {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  margin-bottom: 16px;
+  background: transparent;
+  border: 1px solid var(--spotify-border, rgba(255,255,255,0.1));
+  border-radius: 6px;
+  color: var(--spotify-text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.profile-back-btn:hover {
+  background: var(--spotify-card-hover);
+  color: var(--spotify-text-primary);
+}
+
+[data-theme='light'] .profile-back-btn {
+  border-color: transparent;
+  color: #6b7280;
+}
+
+[data-theme='light'] .profile-back-btn:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 32px 0 24px 0;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
 }
 
 /* Action card links - remove default blue link styling */
