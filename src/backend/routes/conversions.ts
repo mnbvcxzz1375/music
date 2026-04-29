@@ -89,6 +89,7 @@ const runOCRJob = (jobId: string, file: Express.Multer.File) => {
         }
         if (!engine) engine = mockOCREngine;
 
+        console.log(`[OCR] Processing job ${jobId} with engine: ${engine.name}`);
         const result = await engine.processImage(file.buffer, file.mimetype);
         const { warnings, ...conversionResult } = result;
         const processingJob = conversionJobStore.get(jobId);
@@ -116,13 +117,15 @@ const runOCRJob = (jobId: string, file: Express.Multer.File) => {
 router.post('/ocr', uploadSingleOCRFile, (req: Request, res: Response) => {
   const file = req.file;
 
+  console.log(`[OCR] Received request - file: ${file ? file.originalname : 'none'}, mimetype: ${file?.mimetype}, size: ${file?.size}`);
+
   if (!file) {
     handleOCRError(res, 'File is required.');
     return;
   }
 
   if (!OCR_ALLOWED_MIME_TYPES.has(file.mimetype)) {
-    handleOCRError(res, 'Invalid file type. Only PNG, JPEG, TIFF, BMP, and PDF files are allowed.');
+    handleOCRError(res, `Invalid file type '${file.mimetype}'. Only PNG, JPEG, TIFF, BMP, and PDF files are allowed.`);
     return;
   }
 
@@ -133,6 +136,8 @@ router.post('/ocr', uploadSingleOCRFile, (req: Request, res: Response) => {
     file.mimetype,
   );
   runOCRJob(job.id, file);
+
+  console.log(`[OCR] Job created: ${job.id}`);
 
   const response: ConversionJobResponse = {
     jobId: job.id,
