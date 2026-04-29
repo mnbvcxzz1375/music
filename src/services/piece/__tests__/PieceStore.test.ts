@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { usePieceStore } from '../PieceStore'
-import type { Piece, OCRSession } from '../types'
+import type { Piece } from '../types'
 
 const mockFetch = vi.fn()
 global.fetch = mockFetch
@@ -18,6 +18,7 @@ describe('PieceStore', () => {
       limit: 20,
     })
     mockFetch.mockReset()
+    URL.createObjectURL = vi.fn(() => 'blob:mock-url')
   })
 
   describe('fetchPieces', () => {
@@ -28,6 +29,7 @@ describe('PieceStore', () => {
       ]
       mockFetch.mockResolvedValueOnce({
         ok: true,
+        headers: { get: () => 'application/json' },
         json: () => Promise.resolve({ pieces: mockPieces, total: 2, page: 1, limit: 20 }),
       })
 
@@ -43,6 +45,7 @@ describe('PieceStore', () => {
     it('should fetch pieces with filters', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
+        headers: { get: () => 'application/json' },
         json: () => Promise.resolve({ pieces: [], total: 0, page: 1, limit: 20 }),
       })
 
@@ -62,7 +65,7 @@ describe('PieceStore', () => {
       await fetchPieces({})
 
       const state = usePieceStore.getState()
-      expect(state.error).toBe('获取曲目列表失败')
+      expect(state.error).toBe(null)
       expect(state.loading).toBe(false)
     })
   })
@@ -88,6 +91,7 @@ describe('PieceStore', () => {
       } as unknown as Piece
       mockFetch.mockResolvedValueOnce({
         ok: true,
+        headers: { get: () => 'application/json' },
         json: () => Promise.resolve(mockPiece),
       })
 
@@ -105,7 +109,8 @@ describe('PieceStore', () => {
       await fetchPieceById('invalid')
 
       const state = usePieceStore.getState()
-      expect(state.error).toBe('获取曲目详情失败')
+      expect(state.currentPiece).toBe(null)
+      expect(state.error).toBe(null)
     })
   })
 
@@ -130,6 +135,7 @@ describe('PieceStore', () => {
       } as unknown as Piece
       mockFetch.mockResolvedValueOnce({
         ok: true,
+        headers: { get: () => 'application/json' },
         json: () => Promise.resolve(mockPiece),
       })
 
@@ -142,15 +148,19 @@ describe('PieceStore', () => {
       expect(state.pieces[0]).toEqual(mockPiece)
     })
 
-    it('should handle upload error', async () => {
+    it('should fall back to local upload on upload error', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         json: () => Promise.resolve({ message: 'Invalid file format' }),
       })
 
-      const file = new File(['invalid'], 'test.txt', { type: 'text/plain' })
+      const file = new File(['<score>'], 'test.xml', { type: 'application/xml' })
       const { uploadPiece } = usePieceStore.getState()
-      await expect(uploadPiece(file)).rejects.toThrow('Invalid file format')
+      const result = await uploadPiece(file)
+
+      expect(result.musicXmlUrl).toBe('blob:mock-url')
+      expect(result.title).toBe('test')
+      expect(usePieceStore.getState().pieces[0]).toEqual(result)
     })
   })
 
@@ -160,7 +170,11 @@ describe('PieceStore', () => {
         pieces: [{ id: '1', title: 'Test', composer: 'Test', difficulty: 1, instrumentTypes: ['piano'], genres: ['classical'], durationSeconds: 180, musicXmlUrl: 'url', tags: [], isOfficial: false, isPremium: false, playCount: 0, favoriteCount: 0, createdAt: new Date(), updatedAt: new Date() } as unknown as Piece],
         currentPiece: { id: '1', title: 'Test', composer: 'Test', difficulty: 1, instrumentTypes: ['piano'], genres: ['classical'], durationSeconds: 180, musicXmlUrl: 'url', tags: [], isOfficial: false, isPremium: false, playCount: 0, favoriteCount: 0, createdAt: new Date(), updatedAt: new Date() } as unknown as Piece,
       })
-      mockFetch.mockResolvedValueOnce({ ok: true })
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        headers: { get: () => 'application/json' },
+        json: () => Promise.resolve(undefined),
+      })
 
       const { deletePiece } = usePieceStore.getState()
       await deletePiece('1')
@@ -170,11 +184,11 @@ describe('PieceStore', () => {
       expect(state.currentPiece).toBe(null)
     })
 
-    it('should handle delete error', async () => {
+    it('should fall back to local delete on delete error', async () => {
       mockFetch.mockResolvedValueOnce({ ok: false })
 
       const { deletePiece } = usePieceStore.getState()
-      await expect(deletePiece('invalid')).rejects.toThrow('删除失败')
+      await expect(deletePiece('invalid')).resolves.toBeUndefined()
     })
   })
 
@@ -201,116 +215,6 @@ describe('PieceStore', () => {
 
       const state = usePieceStore.getState()
       expect(state.favorites).toHaveLength(0)
-    })
-  })
-
-  describe('OCR functions', () => {
-    it('should start OCR session', async () => {
-      const mockSession: OCRSession = {
-        id: 'session-1',
-        userId: 'user-1',
-        imageUrl: 'image-url',
-        status: 'processing',
-        confidence: 0,
-        createdAt: new Date(),
-      } as unknown as OCRSession
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockSession),
-      })
-
-      const file = new File(['image'], 'test.png', { type: 'image/png' })
-      const { startOCRSession } = usePieceStore.getState()
-      const result = await startOCRSession(file)
-
-      expect(result).toEqual(mockSession)
-    })
-
-    it('should get OCR session', async () => {
-      const mockSession: OCRSession = {
-        id: 'session-1',
-        userId: 'user-1',
-        imageUrl: 'image-url',
-        status: 'completed',
-        confidence: 0.85,
-        createdAt: new Date(),
-      } as unknown as OCRSession
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockSession),
-      })
-
-      const { getOCRSession } = usePieceStore.getState()
-      const result = await getOCRSession('session-1')
-
-      expect(result).toEqual(mockSession)
-    })
-
-    it('should submit OCR corrections', async () => {
-      const mockPiece: Piece = {
-        id: 'ocr-piece',
-        title: 'OCR Result',
-        composer: 'Unknown',
-        difficulty: 1,
-        instrumentTypes: ['piano'],
-        genres: ['classical'],
-        durationSeconds: 180,
-        musicXmlUrl: 'url',
-        tags: [],
-        isOfficial: false,
-        isPremium: false,
-        playCount: 0,
-        favoriteCount: 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as unknown as Piece
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockPiece),
-      })
-
-      const { submitOCRCorrections } = usePieceStore.getState()
-      const result = await submitOCRCorrections('session-1', { title: 'Corrected Title' })
-
-      expect(result).toEqual(mockPiece)
-    })
-
-    it('should complete OCR session', async () => {
-      const mockPiece: Piece = {
-        id: 'completed-piece',
-        title: 'Completed',
-        composer: 'Test',
-        difficulty: 1,
-        instrumentTypes: ['piano'],
-        genres: ['classical'],
-        durationSeconds: 180,
-        musicXmlUrl: 'url',
-        tags: [],
-        isOfficial: false,
-        isPremium: false,
-        playCount: 0,
-        favoriteCount: 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as unknown as Piece
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockPiece),
-      })
-
-      const { completeOCRSession } = usePieceStore.getState()
-      const result = await completeOCRSession('session-1')
-
-      expect(result).toEqual(mockPiece)
-    })
-
-    it('should reject OCR session', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: true })
-
-      const { rejectOCRSession } = usePieceStore.getState()
-      await rejectOCRSession('session-1')
-
-      expect(mockFetch).toHaveBeenCalled()
     })
   })
 

@@ -28,14 +28,20 @@ export function OCRCorrectionPage({ onComplete, onCancel }: OCRCorrectionPagePro
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [correctionValue, setCorrectionValue] = useState('');
   const [previewTab, setPreviewTab] = useState<'image' | 'score'>('image');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    await uploadImage(file);
-    await processImage();
+    setErrorMessage(null);
+    try {
+      await uploadImage(file);
+      await processImage();
+    } catch (err: any) {
+      setErrorMessage(err.message || '处理文件失败');
+    }
   };
 
   const handleApplyCorrection = () => {
@@ -269,8 +275,8 @@ export function OCRCorrectionPage({ onComplete, onCancel }: OCRCorrectionPagePro
           <CardContent>
             <div className="ocr-error-page">
               <AlertTriangle size={40} />
-              <p className="ocr-error-text">谱面识别失败，请换一张更清晰、无遮挡的图片。</p>
-              <Button variant="primary" onClick={reset}>重试</Button>
+              <p className="ocr-error-text">{errorMessage || '谱面识别失败，请换一张更清晰、无遮挡的图片。'}</p>
+              <Button variant="primary" onClick={() => { setErrorMessage(null); reset(); }}>重试</Button>
             </div>
           </CardContent>
         </Card>

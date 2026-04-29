@@ -43,25 +43,8 @@ export interface PieceListResponse {
   totalPages: number;
 }
 
-export interface OCRSession {
-  id: string;
-  userId: string;
-  imageUrl: string;
-  status: OCRStatus;
-  confidence: number;
-  musicXmlDraft?: string;
-  errors: OCRError[];
-  createdAt: Date;
-}
-
-export type OCRStatus = 'processing' | 'review' | 'completed' | 'rejected';
-
-export interface OCRError {
-  measureIndex: number;
-  noteIndex: number;
-  errorType: 'pitch' | 'duration' | 'missing' | 'extra';
-  suggestion?: string;
-}
+// Re-export OCR types from canonical source for backward compatibility
+export type { OCRStatus, OCRError } from '../ocr/types';
 
 export interface PieceUploadResult {
   piece: Piece;

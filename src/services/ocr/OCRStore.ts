@@ -34,13 +34,6 @@ const defaultConfig: OCRConfig = {
   outputFormat: 'MusicXML',
 };
 
-type BackendOCRResponse = {
-  generatedXml?: string;
-  confidence?: number;
-  detectedElements?: DetectedElement[];
-  errors?: OCRError[];
-};
-
 type LocalAnalysis = {
   elements: DetectedElement[];
   errors: OCRError[];
@@ -57,23 +50,38 @@ async function readFileAsDataUrl(file: File): Promise<string> {
   });
 }
 
-async function tryBackendOCR(file: File): Promise<BackendOCRResponse | null> {
+async function submitOCRJob(file: File): Promise<string | null> {
   const formData = new FormData();
   formData.append('file', file);
-
-  try {
-    const response = await fetch('/api/v1/ocr', {
-      method: 'POST',
-      body: formData,
-    });
-
-    if (!response.ok) return null;
-    const contentType = response.headers.get('content-type') || '';
-    if (!contentType.includes('application/json')) return null;
-    return await response.json();
-  } catch {
-    return null;
+  
+  const response = await fetch('/api/v1/conversions/ocr', {
+    method: 'POST',
+    body: formData,
+  });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || error.error?.message || 'OCR 请求失败');
   }
+  
+  const data = await response.json();
+  return data.jobId;
+}
+
+async function pollJobStatus(jobId: string, maxAttempts = 60, intervalMs = 1000): Promise<any> {
+  for (let i = 0; i < maxAttempts; i++) {
+    const response = await fetch(`/api/v1/conversions/${jobId}`);
+    if (!response.ok) throw new Error('获取 OCR 状态失败');
+    
+    const data = await response.json();
+    const job = data.job;
+    
+    if (job.status === 'review_ready' || job.status === 'completed') return job;
+    if (job.status === 'error') throw new Error(job.error?.message || 'OCR 处理失败');
+    
+    await new Promise(resolve => setTimeout(resolve, intervalMs));
+  }
+  throw new Error('OCR 处理超时');
 }
 
 function loadImage(dataUrl: string): Promise<HTMLImageElement> {
@@ -200,6 +208,11 @@ export const useOCRStore = create<OCRState>()((set, get) => ({
   config: defaultConfig,
 
   uploadImage: async (file) => {
+    if (file.type === 'application/pdf') {
+      set({ status: 'error' });
+      throw new Error('PDF 格式需要后端 OMR 处理，请确保后端服务已启动，或使用图片格式上传。');
+    }
+
     set({ status: 'uploading' });
 
     try {
@@ -232,19 +245,24 @@ export const useOCRStore = create<OCRState>()((set, get) => ({
       .then((response) => response.blob())
       .then((blob) => new File([blob], 'score-image', { type: blob.type }));
 
-    const backend = await tryBackendOCR(file);
-    if (backend?.generatedXml) {
-      set({
-        result: {
-          ...currentResult,
-          generatedXml: backend.generatedXml,
-          confidence: backend.confidence ?? 0.8,
-          detectedElements: backend.detectedElements ?? [],
-          errors: backend.errors ?? [],
-        },
-        status: 'reviewing',
-      });
-      return;
+    try {
+      const jobId = await submitOCRJob(file);
+      if (jobId) {
+        const job = await pollJobStatus(jobId);
+        set({
+          result: {
+            ...currentResult,
+            generatedXml: job.result?.generatedXml || '',
+            confidence: job.result?.confidence ?? 0.8,
+            detectedElements: job.result?.detectedElements ?? [],
+            errors: job.error ? [{ elementId: 'backend', type: 'invalid', message: job.error.message }] : [],
+          },
+          status: 'reviewing',
+        });
+        return;
+      }
+    } catch (backendError) {
+      console.warn('Backend OCR unavailable, using local analysis:', backendError);
     }
 
     try {
@@ -275,9 +293,12 @@ export const useOCRStore = create<OCRState>()((set, get) => ({
         : element
     );
 
+    const warnings = [...(result.warnings || [])];
+    warnings.push('校对已应用，MusicXML 预览可能未完全更新。保存后将使用最新版本。');
+
     set((state) => ({
       corrections: [...state.corrections, correction],
-      result: { ...result, detectedElements: updatedElements },
+      result: { ...result, detectedElements: updatedElements, warnings },
     }));
   },
 
@@ -313,7 +334,8 @@ export const useOCRStore = create<OCRState>()((set, get) => ({
 
   exportXml: () => {
     const result = get().result;
-    if (!result || get().status !== 'completed') return null;
+    const status = get().status;
+    if (!result || (status !== 'completed' && status !== 'reviewing')) return null;
     return result.generatedXml;
   },
 
@@ -334,7 +356,7 @@ export const useOCRStore = create<OCRState>()((set, get) => ({
       genres: ['classical'],
       durationSeconds: 120,
       musicXmlUrl: blobUrl,
-      tags: ['ocr'],
+      tags: ['ocr', ...(get().corrections.length > 0 ? ['corrected'] : [])],
       isPremium: false,
       isOfficial: false,
       playCount: 0,
@@ -342,6 +364,27 @@ export const useOCRStore = create<OCRState>()((set, get) => ({
       createdAt: new Date(),
       updatedAt: new Date(),
     };
+
+    // Try backend save first for persistent URL
+    try {
+      const formData = new FormData();
+      formData.append('file', new File([xml], `${newPiece.title}.musicxml`, { type: 'application/xml' }));
+      formData.append('title', newPiece.title);
+
+      const response = await fetch('/api/v1/pieces', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.url || data.piece?.musicXmlUrl) {
+          newPiece.musicXmlUrl = data.url || data.piece.musicXmlUrl;
+        }
+      }
+    } catch {
+      console.warn('Backend save failed, using blob URL fallback');
+    }
 
     usePieceStore.setState((state) => ({
       pieces: [newPiece, ...state.pieces],

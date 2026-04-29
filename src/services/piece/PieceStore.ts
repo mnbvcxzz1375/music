@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Piece, PieceFilter, OCRSession, FavoriteStatus } from './types';
+import type { Piece, PieceFilter, FavoriteStatus } from './types';
 import { OFFICIAL_PIECES } from './official-pieces';
 
 const API_BASE = '/api/v1';
@@ -36,11 +36,6 @@ interface PieceStore {
   deletePiece: (id: string) => Promise<void>;
   toggleFavorite: (pieceId: string) => Promise<void>;
   checkFavoriteStatus: (pieceId: string) => Promise<boolean>;
-  startOCRSession: (imageFile: File) => Promise<OCRSession>;
-  getOCRSession: (sessionId: string) => Promise<OCRSession>;
-  submitOCRCorrections: (sessionId: string, corrections: Record<string, unknown>) => Promise<Piece>;
-  completeOCRSession: (sessionId: string) => Promise<Piece>;
-  rejectOCRSession: (sessionId: string) => Promise<void>;
 }
 
 export const usePieceStore = create<PieceStore>((set, get) => ({
@@ -151,7 +146,7 @@ export const usePieceStore = create<PieceStore>((set, get) => ({
             instrumentTypes: ['piano'],
             genres: ['classical'],
             durationSeconds: 120,
-            musicXmlUrl: '',
+            musicXmlUrl: URL.createObjectURL(new Blob([reader.result as string], { type: 'application/xml' })),
             tags: [],
             isPremium: false,
             isOfficial: false,
@@ -221,75 +216,5 @@ export const usePieceStore = create<PieceStore>((set, get) => ({
   checkFavoriteStatus: async (pieceId) => {
     const { favorites } = get();
     return favorites.some((f) => f.pieceId === pieceId);
-  },
-
-  startOCRSession: async (imageFile) => {
-    set({ loading: true, error: null });
-    try {
-      const result = await jsonFetch<OCRSession>(`${API_BASE}/pieces/ocr`);
-      if (result.ok) {
-        set({ loading: false });
-        return result.data;
-      }
-    } catch { /* ignore */ }
-
-    // Mock OCR session
-    const session: OCRSession = {
-      id: `ocr-${Date.now()}`,
-      imageUrl: URL.createObjectURL(imageFile),
-      status: 'processing',
-      confidence: 0,
-      userId: 'mock-user',
-      errors: [],
-      createdAt: new Date(),
-    };
-    set({ loading: false });
-    return session;
-  },
-
-  getOCRSession: async (sessionId) => {
-    try {
-      const result = await jsonFetch<OCRSession>(`${API_BASE}/pieces/ocr/${sessionId}`);
-      if (result.ok) return result.data;
-    } catch { /* ignore */ }
-    throw new Error('获取OCR会话失败');
-  },
-
-  submitOCRCorrections: async (sessionId, _corrections) => {
-    set({ loading: true, error: null });
-    try {
-      const result = await jsonFetch<Piece>(`${API_BASE}/pieces/ocr/${sessionId}/correct`);
-      if (result.ok) {
-        set((state) => ({
-          pieces: [result.data, ...state.pieces],
-          loading: false,
-        }));
-        return result.data;
-      }
-    } catch { /* ignore */ }
-    throw new Error('提交修正失败');
-  },
-
-  completeOCRSession: async (sessionId) => {
-    set({ loading: true, error: null });
-    try {
-      const result = await jsonFetch<Piece>(`${API_BASE}/pieces/ocr/${sessionId}/complete`);
-      if (result.ok) {
-        set((state) => ({
-          pieces: [result.data, ...state.pieces],
-          loading: false,
-        }));
-        return result.data;
-      }
-    } catch { /* ignore */ }
-    throw new Error('完成OCR失败');
-  },
-
-  rejectOCRSession: async (sessionId) => {
-    try {
-      const result = await jsonFetch<void>(`${API_BASE}/pieces/ocr/${sessionId}/reject`);
-      if (result.ok) return;
-    } catch { /* ignore */ }
-    // No-op in mock mode
   },
 }));

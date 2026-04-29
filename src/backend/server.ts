@@ -4,10 +4,12 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 
 import authRoutes from './routes/auth';
+import conversionRoutes from './routes/conversions';
 import pieceRoutes from './routes/pieces';
 import practiceRoutes from './routes/practice';
 import statsRoutes from './routes/stats';
 import subscriptionRoutes from './routes/subscription';
+import storageRoutes from './routes/storage';
 import { testConnection } from './db/connection';
 import { initRedis, testRedisConnection } from './db/redis';
 import { errorHandler, requestLogger } from './middleware/errorHandler';
@@ -32,10 +34,12 @@ app.use(limiter);
 
 // Routes
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/conversions', conversionRoutes);
 app.use('/api/v1/pieces', pieceRoutes);
 app.use('/api/v1/practice', practiceRoutes);
 app.use('/api/v1/stats', statsRoutes);
 app.use('/api/v1/subscriptions', subscriptionRoutes);
+app.use('/api/v1/storage', storageRoutes);
 
 // Health Check Route
 app.get('/api/health', async (_req: Request, res: Response) => {
@@ -86,10 +90,12 @@ const startServer = async () => {
       console.log(`Backend server running at http://localhost:${port}`);
       console.log(`Health check available at http://localhost:${port}/api/health`);
       console.log(`Auth routes mounted at /api/v1/auth`);
+      console.log(`Conversion routes mounted at /api/v1/conversions`);
       console.log(`Piece routes mounted at /api/v1/pieces`);
       console.log(`Practice routes mounted at /api/v1/practice`);
       console.log(`Stats & Achievements mounted at /api/v1/stats`);
       console.log(`Subscription routes mounted at /api/v1/subscriptions`);
+      console.log(`Storage routes mounted at /api/v1/storage`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);

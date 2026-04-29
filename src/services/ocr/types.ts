@@ -7,6 +7,7 @@ export interface OCRResult {
   confidence: number;
   detectedElements: DetectedElement[];
   errors: OCRError[];
+  warnings?: string[];
   timestamp: Date;
 }
 
