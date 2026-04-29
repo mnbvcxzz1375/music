@@ -46,6 +46,8 @@ const handleOCRError = (res: Response, message: string) => {
 
 const uploadSingleOCRFile = (req: Request, res: Response, next: NextFunction) => {
   ocrUpload.single('file')(req, res, (error: unknown) => {
+    console.log(`[OCR-Multer] Error: ${error ? (error instanceof Error ? error.message : String(error)) : 'none'}, File: ${req.file ? req.file.originalname : 'none'}, Mimetype: ${req.file?.mimetype}`);
+
     if (!error) {
       next();
       return;
