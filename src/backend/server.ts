@@ -73,34 +73,38 @@ app.use(errorHandler);
 
 // Start Server
 const startServer = async () => {
+  // Initialize connections (non-fatal - conversion routes don't need DB/Redis)
   try {
-    // Initialize connections
     await initRedis();
-    
+  } catch {
+    console.warn('Redis connection failed - conversion routes will still work');
+  }
+
+  try {
     const dbOk = await testConnection();
     const redisOk = await testRedisConnection();
-    
-    if (!dbOk || !redisOk) {
-      console.error('Warning: Database or Redis connection failed on startup');
-    } else {
+
+    if (!dbOk) {
+      console.warn('Database connection failed - auth/pieces/stats routes will not work');
+      console.warn('Conversion routes (OCR/transcription) are still available');
+    }
+    if (!redisOk) {
+      console.warn('Redis connection failed - caching disabled');
+    }
+    if (dbOk && redisOk) {
       console.log('Database and Redis connections established');
     }
-
-    app.listen(port, () => {
-      console.log(`Backend server running at http://localhost:${port}`);
-      console.log(`Health check available at http://localhost:${port}/api/health`);
-      console.log(`Auth routes mounted at /api/v1/auth`);
-      console.log(`Conversion routes mounted at /api/v1/conversions`);
-      console.log(`Piece routes mounted at /api/v1/pieces`);
-      console.log(`Practice routes mounted at /api/v1/practice`);
-      console.log(`Stats & Achievements mounted at /api/v1/stats`);
-      console.log(`Subscription routes mounted at /api/v1/subscriptions`);
-      console.log(`Storage routes mounted at /api/v1/storage`);
-    });
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
+  } catch {
+    console.warn('Some services unavailable - starting server anyway');
   }
+
+  app.listen(port, () => {
+    console.log(`Backend server running at http://localhost:${port}`);
+    console.log(`Health check available at http://localhost:${port}/api/health`);
+    console.log(`Conversion routes mounted at /api/v1/conversions`);
+    console.log(`Auth routes mounted at /api/v1/auth`);
+    console.log(`Piece routes mounted at /api/v1/pieces`);
+  });
 };
 
 startServer();

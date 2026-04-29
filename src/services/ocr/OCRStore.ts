@@ -156,8 +156,8 @@ async function analyzeStaffLayout(dataUrl: string): Promise<LocalAnalysis> {
     {
       elementId: 'omr-backend',
       type: 'missing',
-      message: '当前未连接真正的 OMR 识谱服务，前端只能完成图片预处理和谱表定位，不能可靠识别音高、节奏与多声部。',
-      suggestion: '部署 Audiveris 或云端 OMR 接口后，系统会优先使用后端返回的 MusicXML。',
+      message: '后端 OMR 服务未启动。运行 `npm run server` 可启用完整识谱功能。',
+      suggestion: '当前仅完成图片预处理和谱表定位。部署 Audiveris 或配置 GOT-OCR 接口后，系统会自动使用后端返回的 MusicXML。',
     },
   ];
 
@@ -263,6 +263,11 @@ export const useOCRStore = create<OCRState>()((set, get) => ({
       }
     } catch (backendError) {
       console.warn('Backend OCR unavailable, using local analysis:', backendError);
+      // Add user-facing warning about backend unavailability
+      currentResult.warnings = [
+        '后端 OMR 服务未启动。请运行 `npm run server` 启动后端，或确保端口 3001 可访问。',
+        '当前使用本地图片分析（仅能检测谱表位置，无法识别音高和节奏）。',
+      ];
     }
 
     try {

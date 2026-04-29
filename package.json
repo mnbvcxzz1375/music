@@ -15,6 +15,7 @@
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
     "e2e": "playwright test",
+    "server": "node --import tsx src/backend/server.ts",
     "build:tokens": "style-dictionary build --config=src/styles/config.js",
     "release": "node scripts/release.js",
     "docker:build": "docker build -t music-practice-app .",
