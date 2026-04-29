@@ -2583,6 +2583,30 @@ input[type='range']::-webkit-slider-runnable-track {
   min-height: 300px;
 }
 
+/* Dark mode: force light background for score rendering so black notes are visible */
+[data-theme='dark'] .ocr-score-renderer {
+  background: #f9fafb !important;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+[data-theme='dark'] .ocr-score-renderer .score-container,
+[data-theme='dark'] .ocr-score-renderer div {
+  background: #f9fafb !important;
+}
+
+/* Ensure OSMD SVG elements are visible in dark mode */
+[data-theme='dark'] .ocr-score-renderer svg {
+  background: #f9fafb !important;
+}
+
+[data-theme='dark'] .ocr-score-renderer svg text,
+[data-theme='dark'] .ocr-score-renderer svg path,
+[data-theme='dark'] .ocr-score-renderer svg rect {
+  fill: #111827 !important;
+  stroke: #111827 !important;
+}
+
 .ocr-no-score {
   text-align: center;
   padding: var(--spacing-8);
