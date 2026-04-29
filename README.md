@@ -10,6 +10,8 @@
 - **🎤 实时音高检测** - YIN 算法实现高精度单音检测（延迟 < 80ms）
 - **⏱️ 节奏评估** - 自动检测音符起始时间，评估演奏时值
 - **🔄 反复处理** - 支持 MusicXML 中的反复记号、D.C./D.S./Coda/Fine
+- **📷 OCR 乐谱扫描** - 上传乐谱图片自动识别为 MusicXML（支持 Audiveris/GOT-OCR2.0）
+- **🎙️ 录音转谱** - 录制钢琴演奏或上传 WAV 音频自动转为乐谱
 
 ### 练习功能
 
@@ -55,12 +57,17 @@ chmod +x start.sh
 # 1. 安装依赖
 npm install
 
-# 2. 启动开发服务器
+# 2. 启动后端服务器（OCR/转谱功能需要）
+npm run server
+
+# 3. 在另一个终端启动前端开发服务器
 npm run dev
 
-# 3. 打开浏览器访问
-# http://localhost:5174
+# 4. 打开浏览器访问
+# http://localhost:5173
 ```
+
+> **注意**: OCR 和转谱功能需要后端服务器同时运行。如果只运行 `npm run dev`，这些功能会使用本地 Mock 数据。
 
 ### 停止服务
 
@@ -102,7 +109,40 @@ stop.bat
 点击 "打开乐谱" → 选择 .xml 或 .musicxml 文件
 ```
 
-#### 方式二：使用测试乐谱
+#### 方式二：OCR 扫描乐谱图片
+
+```
+点击 "扫描谱面" → 选择乐谱图片（PNG/JPEG/TIFF/BMP/PDF）
+→ 系统自动识别并生成 MusicXML → 校对 → 保存到曲库
+```
+
+**OCR 引擎配置**（可选）：
+
+```bash
+# Audiveris（本地 Java 程序，AGPL-3.0 许可）
+set AUDIVERIS_BIN=C:\path\to\Audiveris\bin\Audiveris.bat
+
+# GOT-OCR2.0（远程 API，Apache-2.0 许可）
+set GOT_OCR_URL=http://your-gpu-server:8000/ocr
+```
+
+#### 方式三：录音转谱（钢琴）
+
+```
+点击 "录音转谱" → 录制钢琴演奏或上传 WAV 文件
+→ 系统自动识别音符并生成 MusicXML → 校对 → 保存到曲库
+```
+
+**转谱引擎配置**（可选）：
+
+```bash
+# bytedance/piano_transcription（远程 worker，Apache/MIT 许可）
+set PIANO_TRANSCRIPTION_URL=http://your-worker:8000/transcribe
+```
+
+> **限制**: 录音转谱仅支持钢琴独奏，WAV 格式，时长 ≥ 2 秒。
+
+#### 方式四：使用测试乐谱
 
 应用内置了测试乐谱，可直接加载体验。
 
@@ -200,8 +240,11 @@ stop.bat
 ## 🔧 开发命令
 
 ```bash
-# 开发模式
+# 开发模式（前端）
 npm run dev
+
+# 启动后端服务器（OCR/转谱功能）
+npm run server
 
 # 类型检查
 npm run type-check
@@ -217,6 +260,9 @@ npm run build
 
 # 预览生产版本
 npm run preview
+
+# E2E 测试
+npm run e2e
 ```
 
 ---
@@ -229,12 +275,24 @@ music/
 │   ├── audio/              # 音频处理模块
 │   │   ├── capture/        # 音频采集
 │   │   ├── detection/      # 音高检测 (YIN 算法)
-│   │   └── rhythm/         # 节奏评估
+│   │   ├── rhythm/         # 节奏评估
+│   │   ├── RecordingBuffer.ts    # 录音缓冲区
+│   │   ├── WavEncoder.ts         # WAV 编码器
+│   │   └── RecordingService.ts   # 浏览器录音服务
+│   │
+│   ├── backend/            # Express 后端服务
+│   │   ├── routes/
+│   │   │   └── conversions.ts    # OCR/转谱 API
+│   │   └── services/
+│   │       ├── conversion/       # 转换作业存储
+│   │       ├── ocr/              # OCR 引擎适配器
+│   │       └── transcription/    # 转谱引擎适配器
 │   │
 │   ├── components/         # React 组件
 │   │   ├── PitchIndicator/ # 音高指示器
 │   │   ├── PartSelector/   # 声部选择器
-│   │   └── ScoreRenderer/  # 乐谱渲染
+│   │   ├── ScoreRenderer/  # 乐谱渲染
+│   │   └── OCR/            # OCR 校对页面
 │   │
 │   ├── engine/             # 核心引擎
 │   │   ├── practice/       # 练习流程引擎
@@ -247,12 +305,17 @@ music/
 │   ├── services/           # 服务层
 │   │   ├── calibration/    # 校准服务
 │   │   ├── parser/         # MusicXML 解析
-│   │   └── settings/       # 设置管理
+│   │   ├── settings/       # 设置管理
+│   │   ├── ocr/            # OCR 前端状态管理
+│   │   ├── conversion/     # 转换作业类型
+│   │   └── transcription/  # 转谱服务（MIDI→MusicXML）
 │   │
 │   └── types/              # TypeScript 类型定义
 │
 ├── test/
 │   └── fixtures/           # 测试用例文件
+│       ├── ocr/            # OCR 测试图片
+│       └── transcription/  # 转谱测试数据
 │
 └── public/                 # 静态资源
 ```
@@ -309,22 +372,52 @@ npm test -- --coverage
 2. 点击"打开乐谱"按钮上传
 3. 支持从 MuseScore、Finale 等软件导出的 MusicXML
 
+### Q: OCR 识别不准确？
+
+1. 确保图片清晰、背景干净、分辨率足够（建议 300 DPI）
+2. 当前使用 Mock 引擎，只返回示例数据
+3. 配置真实 OMR 引擎（Audiveris/GOT-OCR）获得准确识别
+4. 识别结果可通过校对页面手动修正
+
+### Q: 录音转谱只支持钢琴吗？
+
+是的，v1 版本仅支持钢琴独奏。其他乐器的转谱功能计划在后续版本中添加。
+
+### Q: 后端服务器启动失败？
+
+1. 确保端口 3001 未被占用
+2. 运行 `npm run server` 查看错误信息
+3. OCR/转谱功能不需要数据库，即使 PostgreSQL/Redis 连接失败也能正常工作
+
 ---
 
 ## 🛠️ 技术栈
 
 - **前端框架**: React 18 + TypeScript
 - **构建工具**: Vite 5
-- **测试框架**: Vitest + @testing-library/react
+- **后端**: Express + TypeScript (tsx)
+- **测试框架**: Vitest + Playwright
 - **乐谱渲染**: OSMD (OpenSheetMusicDisplay)
 - **音频处理**: Web Audio API + AudioWorklet
 - **音高检测**: YIN 算法
+- **OCR 引擎**: Audiveris (AGPL-3.0) / GOT-OCR2.0 (Apache-2.0)
+- **转谱引擎**: bytedance/piano_transcription (Apache/MIT)
 
 ---
 
 ## 📝 更新日志
 
-### v1.0.0 (当前版本)
+### v2.0.0 (当前版本)
+
+- ✅ OCR 乐谱扫描（支持 Audiveris/GOT-OCR2.0 引擎）
+- ✅ 录音转谱（钢琴独奏 → MusicXML）
+- ✅ 异步转换作业 API（上传 → 处理 → 校对 → 保存）
+- ✅ 暗色/亮色主题完整支持
+- ✅ 响应式布局（移动端适配）
+- ✅ Spotify 风格侧边栏导航
+- ✅ Instagram 风格登录页面
+
+### v1.0.0
 
 - ✅ MusicXML 解析器
 - ✅ OSMD 乐谱渲染
@@ -336,10 +429,10 @@ npm test -- --coverage
 - ✅ 音频校准向导
 - ✅ 设置持久化
 
-### 计划功能 (v2.0+)
+### 计划功能 (v3.0+)
 
 - ⏳ 复音检测 (Basic Pitch)
-- ⏳ OCR 乐谱扫描
+- ⏳ 多乐器转谱支持
 - ⏳ AI 练习建议
 
 ---
@@ -354,4 +447,7 @@ MIT License
 
 - [OSMD](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay) - 乐谱渲染
 - [YIN Algorithm](https://github.com/peterkhayes/pitchfinder) - 音高检测参考
+- [Audiveris](https://github.com/Audiveris/audiveris) - OMR 乐谱识别（AGPL-3.0）
+- [GOT-OCR2.0](https://github.com/Ucas-HaoranWei/GOT-OCR2.0) - OCR 识别（Apache-2.0）
+- [piano_transcription](https://github.com/bytedance/piano_transcription) - 钢琴转谱（Apache/MIT）
 - [Vite](https://vitejs.dev/) - 构建工具
